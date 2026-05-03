@@ -396,6 +396,169 @@
             color: var(--color-primary);
         }
     }
+
+    /* ── Form Input ── */
+    .form-input {
+        width: 100%;
+        height: 48px;
+        padding-inline: var(--spacing-sm);
+        border: 1px solid var(--color-outline-variant);
+        border-radius: var(--radius-sm);
+        background-color: var(--color-surface-container-low);
+        color: var(--color-on-surface);
+        font-family: var(--font-body);
+        font-size: var(--text-body-md-size);
+        line-height: var(--text-body-md-leading);
+        transition: border-color 150ms ease, box-shadow 150ms ease;
+        outline: none;
+
+        &::placeholder {
+            color: var(--color-outline);
+        }
+
+        &:hover {
+            border-color: var(--color-outline);
+        }
+
+        &:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(0, 61, 155, 0.12);
+        }
+
+        &.input-error {
+            border-color: var(--color-error);
+            box-shadow: 0 0 0 3px rgba(186, 26, 26, 0.12);
+        }
+    }
+
+    /* Input with right-side icon (e.g. password toggle) */
+    .form-input-icon-right {
+        padding-right: 2.75rem;
+    }
+
+    /* ── Form Field wrapper ── */
+    .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xs);
+        width: 100%;
+    }
+
+    /* ── Form Label ── */
+    .form-label {
+        font-family: var(--font-body);
+        font-size: var(--text-label-bold-size);
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--color-on-surface-variant);
+    }
+
+    /* ── Field error message ── */
+    .form-error {
+        font-family: var(--font-body);
+        font-size: var(--text-body-sm-size);
+        line-height: var(--text-body-sm-leading);
+        color: var(--color-on-error-container);
+        display: none;
+
+        &.visible {
+            display: block;
+        }
+    }
+
+    /* ── Password eye toggle button ── */
+    .btn-eye {
+        position: absolute;
+        right: var(--spacing-sm);
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        color: var(--color-outline);
+        line-height: 1;
+        transition: color 150ms ease;
+
+        &:hover {
+            color: var(--color-on-surface-variant);
+        }
+    }
+
+    /* ── Toast notification ── */
+    .toast {
+        position: fixed;
+        top: 1.25rem;
+        left: 50%;
+        transform: translateX(-50%) translateY(0);
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--color-outline-variant);
+        background-color: var(--color-surface-container-lowest);
+        color: var(--color-on-surface);
+        font-family: var(--font-body);
+        font-size: var(--text-body-sm-size);
+        font-weight: 500;
+        box-shadow: 0 4px 20px rgba(4, 27, 60, 0.1);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+
+        &.toast-success {
+            color: var(--color-primary);
+            border-color: var(--color-primary-fixed-dim);
+        }
+
+        &.toast-error {
+            color: var(--color-on-error-container);
+            border-color: var(--color-error-container);
+        }
+
+        &.toast-hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-10px);
+            pointer-events: none;
+        }
+    }
+
+    /* ── Auth card accent bar ── */
+    .card-accent-bar {
+        height: 4px;
+        width: 100%;
+        background: linear-gradient(90deg,
+                var(--color-primary) 0%,
+                var(--color-primary-fixed-dim) 100%);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    /* ── Brand logo mark ── */
+    .brand-mark {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: var(--radius-sm);
+        background-color: var(--color-primary);
+        color: var(--color-on-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* ── Spinner (inside submit button) ── */
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        border-top-color: var(--color-on-primary);
+        border-radius: 9999px;
+        animation: spinner-spin 0.7s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+    }
 }
 
 /* ── Keyframe Animations ────────────────────────────────────── */
@@ -484,6 +647,24 @@
     }
 }
 
+@keyframes spinner-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes auth-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 /* ── Animation Utilities ────────────────────────────────────── */
 @layer utilities {
 
@@ -545,5 +726,19 @@
     /* Nav scroll shadow */
     .nav-scrolled {
         box-shadow: 0 1px 16px rgba(4, 27, 60, 0.08);
+    }
+
+    /* ── Auth / Sign-up page ── */
+    .animate-auth-card {
+        animation: auth-card-in 0.45s var(--ease-out-expo) both;
+    }
+
+    .auth-page-bg {
+        background-color: var(--color-surface-container-low);
+        min-height: 100svh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-md) var(--spacing-gutter);
     }
 }

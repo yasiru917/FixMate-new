@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>FixMate — Sign In</title>
+
+        <!-- Google Fonts: Manrope (headline) + Inter (body) -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700&family=Inter:wght@400;600&display=swap"
+                rel="stylesheet" />
+
+        <!-- Compiled Tailwind output -->
+        <link rel="stylesheet" href="./src/output.css" />
+
+        <style>
+                /* ── Divider ─────────────────────────────────────────── */
+                .divider {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.75rem;
+                        color: var(--color-on-surface-variant);
+                        font-size: 0.75rem;
+                        margin: 1.5rem 0;
+                }
+
+                .divider::before,
+                .divider::after {
+                        content: "";
+                        flex: 1;
+                        height: 1px;
+                        background: var(--color-outline-variant, rgba(0, 0, 0, 0.12));
+                }
+
+                /* ── Google button ───────────────────────────────────── */
+                .btn-google {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.625rem;
+                        width: 100%;
+                        padding: 0.625rem 1rem;
+                        border: 1px solid var(--color-outline-variant, rgba(0, 0, 0, 0.2));
+                        border-radius: 0.5rem;
+                        background: transparent;
+                        font-size: 0.875rem;
+                        font-weight: 600;
+                        color: var(--color-on-surface);
+                        cursor: pointer;
+                        transition: background 0.15s ease, box-shadow 0.15s ease;
+                }
+
+                .btn-google:hover {
+                        background: var(--color-surface-variant, rgba(0, 0, 0, 0.04));
+                        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+                }
+
+                .btn-google svg {
+                        flex-shrink: 0;
+                }
+
+                /* ── Forgot password link ────────────────────────────── */
+                .btn-forgot {
+                        background: none;
+                        border: none;
+                        padding: 0;
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                        color: var(--color-primary);
+                        transition: opacity 0.15s;
+                }
+
+                .btn-forgot:hover {
+                        opacity: 0.75;
+                }
+        </style>
+</head>
+
+<body class="auth-page-bg">
+
+        <!-- ── Toast ──────────────────────────────────────────────── -->
+        <div id="toast" class="toast toast-hidden" role="alert" aria-live="polite">
+                <span id="toast-icon"></span>
+                <span id="toast-msg"></span>
+        </div>
+
+        <!-- ── Auth card ──────────────────────────────────────────── -->
+        <div class="animate-auth-card card w-full max-w-2xl overflow-hidden !p-0">
+
+                <!-- Accent bar -->
+                <div class="card-accent-bar"></div>
+
+                <div class="p-8 sm:p-10">
+
+                        <!-- Brand -->
+                        <div class="flex flex-col items-center justify-center gap-3 mb-1">
+                                <span class="text-headline-md text-primary-container">FixMate</span>
+                                <p class="text-body-sm mb-8" style="color: var(--color-on-surface-variant);">
+                                        Sign in to your roadside assistance account.
+                                </p>
+                        </div>
+
+                        <!-- ── Form ─────────────────────────────────────────── -->
+                        <form id="login-form" novalidate>
+
+                                <!-- Email -->
+                                <div class="form-field mb-4">
+                                        <label for="email" class="form-label">Email address</label>
+                                        <input id="email" type="email" placeholder="you@example.com"
+                                                autocomplete="email" class="form-input" />
+                                        <p class="form-error" id="email-err"></p>
+                                </div>
+
+                                <!-- Password -->
+                                <div class="form-field mb-2">
+                                        <div class="flex items-center justify-between mb-1">
+                                                <label for="password" class="form-label !mb-0">Password</label>
+                                                <button type="button" id="forgot-password-btn" class="btn-forgot">
+                                                        Forgot password?
+                                                </button>
+                                        </div>
+                                        <div class="relative">
+                                                <input id="password" type="password" placeholder="Your password"
+                                                        class="form-input form-input-icon-right" />
+                                                <button type="button" class="btn-eye" data-target="password"
+                                                        aria-label="Toggle password visibility">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                stroke-width="2" viewBox="0 0 24 24">
+                                                                <path
+                                                                        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                                                <circle cx="12" cy="12" r="3" />
+                                                        </svg>
+                                                </button>
+                                        </div>
+                                        <p class="form-error" id="password-err"></p>
+                                </div>
+
+                                <!-- Remember me -->
+                                <div class="flex items-center gap-2 mb-8 mt-4">
+                                        <input id="remember-me" type="checkbox"
+                                                class="w-4 h-4 rounded accent-[var(--color-primary)] cursor-pointer" />
+                                        <label for="remember-me" class="text-body-sm cursor-pointer select-none"
+                                                style="color: var(--color-on-surface-variant);">
+                                                Remember me
+                                        </label>
+                                </div>
+
+                                <!-- Submit -->
+                                <button id="submit-btn" type="submit" class="btn btn-primary w-full">
+                                        Sign in
+                                </button>
+
+                                <!-- Footer -->
+                                <p class="text-body-sm text-center mt-6"
+                                        style="color: var(--color-on-surface-variant);">
+                                        Don't have an account?
+                                        <a href="Signup.html" class="font-semibold hover:underline"
+                                                style="color: var(--color-primary);">Create one</a>
+                                </p>
+
+                        </form>
+                </div>
+        </div>
+
+        <!--
+    ✅ LOAD ORDER:
+    1. Supabase CDN must come first — exposes window.supabase global
+    2. login.js comes after — uses that global to createClient()
+  -->
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="./src/js/login.js"></script>
+
+</body>
+
+</html>

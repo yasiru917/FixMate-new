@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="./src/output.css">
 
     <style>
+        /* ── Page Loader ─────────────────────────────────────── */
         #page-loader {
             position: fixed;
             inset: 0;
@@ -58,7 +59,6 @@
             animation: loader-bar 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.15s forwards;
         }
 
-        /* Hide loader after animation, reveal body */
         body {
             overflow: hidden;
         }
@@ -71,14 +71,196 @@
             pointer-events: none;
             display: none;
         }
+
+        /* ── Auth Modal ──────────────────────────────────────── */
+        #auth-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 1;
+            transition: opacity 0.2s ease;
+        }
+
+        #auth-modal.hidden {
+            display: none;
+        }
+
+        #auth-modal-card {
+            background: var(--color-surface-container-lowest, #fff);
+            border-radius: 1.25rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+            overflow: hidden;
+            animation: modal-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes modal-in {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        #auth-modal-card .modal-accent-bar {
+            height: 4px;
+            background: linear-gradient(90deg, #003d9b, #4f7cff);
+        }
+
+        /* ── Auth-state nav elements ─────────────────────────── */
+        /* Hide all auth UI by default, JS will reveal the right one */
+        .nav-guest,
+        .nav-user {
+            display: none;
+        }
+
+        /* ── User avatar chip ────────────────────────────────── */
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+            border-radius: 9999px;
+            border: 1px solid var(--color-outline-variant, rgba(0, 0, 0, 0.15));
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--color-on-surface);
+            transition: background 0.15s;
+        }
+
+        .user-chip:hover {
+            background: var(--color-surface-container, rgba(0, 0, 0, 0.04));
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 9999px;
+            background: #003d9b;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* ── Modal form helpers ──────────────────────────────── */
+        .modal-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--color-on-surface);
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--color-outline-variant, rgba(0, 0, 0, 0.2));
+            border-radius: 0.5rem;
+            font-size: 0.9375rem;
+            background: var(--color-surface, #fff);
+            color: var(--color-on-surface);
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .modal-input:focus {
+            border-color: #003d9b;
+            box-shadow: 0 0 0 3px rgba(0, 61, 155, 0.12);
+        }
+
+        .modal-input-wrap {
+            position: relative;
+        }
+
+        .modal-input-wrap .modal-input {
+            padding-right: 2.5rem;
+        }
+
+        .modal-eye {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--color-outline, #888);
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .modal-error {
+            font-size: 0.75rem;
+            color: #c0392b;
+            min-height: 1rem;
+        }
+
+        .modal-divider {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--color-on-surface-variant, #888);
+            font-size: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        .modal-divider::before,
+        .modal-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--color-outline-variant, rgba(0, 0, 0, 0.12));
+        }
+
+        .btn-google-modal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.625rem;
+            width: 100%;
+            padding: 0.625rem 1rem;
+            border: 1px solid var(--color-outline-variant, rgba(0, 0, 0, 0.2));
+            border-radius: 0.5rem;
+            background: transparent;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-on-surface);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-google-modal:hover {
+            background: var(--color-surface-variant, rgba(0, 0, 0, 0.04));
+        }
     </style>
 </head>
 
 <body>
 
-
-    <!-- Page Loader  -->
-
+    <!-- ── Page Loader ───────────────────────────────────────────── -->
     <div id="page-loader" aria-hidden="true">
         <span class="loader-logo">FixMate</span>
         <div class="loader-track">
@@ -87,13 +269,113 @@
     </div>
 
 
-    <!-- Top Nav — Responsive (Mobile + Desktop)                   -->
+    <!-- ── Auth Modal ───────────────────────────────────────────── -->
+    <div id="auth-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+        <div id="auth-modal-card">
 
+            <div class="modal-accent-bar"></div>
+
+            <div style="padding: 2rem 2rem 1.75rem;">
+
+                <!-- Header -->
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+                    <div>
+                        <h2 id="auth-modal-title"
+                            style="font-family:'Manrope',sans-serif; font-size:1.25rem; font-weight:700; color:var(--color-on-surface);">
+                            Welcome back
+                        </h2>
+                        <p style="font-size:0.8125rem; color:var(--color-on-surface-variant); margin-top:0.25rem;">
+                            Sign in to your FixMate account
+                        </p>
+                    </div>
+                    <button id="close-auth" aria-label="Close"
+                        style="background:none; border:none; cursor:pointer; color:var(--color-on-surface-variant); display:flex; align-items:center; padding:0.25rem;">
+                        <span class="material-symbols-outlined" style="font-size:22px;">close</span>
+                    </button>
+                </div>
+
+                <!-- Google -->
+                <button id="modal-google-btn" class="btn-google-modal" type="button">
+                    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                        <g fill="none" fill-rule="evenodd">
+                            <path
+                                d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
+                                fill="#4285F4" />
+                            <path
+                                d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
+                                fill="#34A853" />
+                            <path
+                                d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+                                fill="#FBBC05" />
+                            <path
+                                d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
+                                fill="#EA4335" />
+                        </g>
+                    </svg>
+                    Continue with Google
+                </button>
+
+                <div class="modal-divider">or sign in with email</div>
+
+                <!-- Form -->
+                <form id="modal-login-form" novalidate>
+
+                    <div class="modal-field">
+                        <label for="modal-email" class="modal-label">Email address</label>
+                        <input id="modal-email" type="email" placeholder="you@example.com" autocomplete="email"
+                            class="modal-input" />
+                        <p class="modal-error" id="modal-email-err"></p>
+                    </div>
+
+                    <div class="modal-field" style="margin-bottom:0.5rem;">
+                        <div
+                            style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.25rem;">
+                            <label for="modal-password" class="modal-label">Password</label>
+                            <button type="button" id="modal-forgot-btn"
+                                style="background:none; border:none; font-size:0.75rem; font-weight:600; color:var(--color-primary, #003d9b); cursor:pointer; padding:0;">
+                                Forgot password?
+                            </button>
+                        </div>
+                        <div class="modal-input-wrap">
+                            <input id="modal-password" type="password" placeholder="Your password"
+                                class="modal-input" />
+                            <button type="button" class="modal-eye" data-target="modal-password"
+                                aria-label="Toggle visibility">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="modal-error" id="modal-password-err"></p>
+                    </div>
+
+                    <div style="margin-bottom: 1.25rem; margin-top: 0.5rem;">
+                        <button id="modal-submit-btn" type="submit" class="btn btn-primary w-full">
+                            Sign in
+                        </button>
+                    </div>
+
+                    <p style="text-align:center; font-size:0.8125rem; color:var(--color-on-surface-variant);">
+                        Don't have an account?
+                        <a href="Signup.html"
+                            style="font-weight:600; color:var(--color-primary, #003d9b); text-decoration:none;">
+                            Create one
+                        </a>
+                    </p>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ── Top Nav ──────────────────────────────────────────────── -->
     <nav id="top-nav" class="sticky top-0 z-50 w-full
               bg-surface-container-lowest border-b border-outline-variant
               transition-shadow duration-300">
 
-        <!-- ── Nav Bar Row ── -->
         <div class="page-container flex items-center justify-between h-16">
 
             <!-- Brand -->
@@ -109,11 +391,22 @@
             <!-- Desktop: Actions -->
             <div class="hidden md:flex items-center gap-3">
                 <button class="btn btn-sos btn-sm animate-sos-pulse">SOS Emergency</button>
-                <button class="btn btn-ghost btn-sm">Login</button>
-                <span
-                    class="material-symbols-outlined text-outline cursor-pointer hover:text-primary transition-colors select-none">notifications</span>
-                <span
-                    class="material-symbols-outlined text-outline cursor-pointer hover:text-primary transition-colors select-none">account_circle</span>
+
+                <!-- GUEST state -->
+                <div class="nav-guest" id="nav-guest-desktop">
+                    <button id="login-btn-desktop" class="btn btn-ghost btn-sm">Login</button>
+                </div>
+
+                <!-- USER state -->
+                <div class="nav-user" id="nav-user-desktop" style="display:none; align-items:center; gap:0.75rem;">
+                    <span
+                        class="material-symbols-outlined text-outline cursor-pointer hover:text-primary transition-colors select-none">notifications</span>
+                    <button class="user-chip" id="user-chip-desktop">
+                        <div class="user-avatar" id="user-avatar-desktop">?</div>
+                        <span id="user-label-desktop">Account</span>
+                    </button>
+                    <button id="logout-btn-desktop" class="btn btn-ghost btn-sm">Logout</button>
+                </div>
             </div>
 
             <!-- Mobile: SOS + Hamburger -->
@@ -141,16 +434,26 @@
                 border-t border-outline-variant bg-surface-container-lowest">
             <div class="page-container py-4 flex flex-col gap-1">
 
-                <!-- Nav Links -->
                 <a href="#" class="nav-link nav-link-active py-3 rounded-lg block">Find Mechanic</a>
                 <a href="#how-it-works" class="nav-link py-3 rounded-lg block">How it works</a>
                 <a href="#about-us" class="nav-link py-3 rounded-lg block">Our Vision</a>
 
                 <div class="h-px bg-outline-variant my-2"></div>
 
-                <!-- Actions -->
-                <div class="flex flex-col gap-2 pb-2">
-                    <button class="btn btn-ghost btn-sm w-full">Login</button>
+                <!-- GUEST state -->
+                <div class="nav-guest flex flex-col gap-2 pb-2" id="nav-guest-mobile">
+                    <button id="login-btn-mobile" class="btn btn-ghost btn-sm w-full">Login</button>
+                    <a href="Signup.html" class="btn btn-primary btn-sm w-full text-center">Sign Up</a>
+                </div>
+
+                <!-- USER state -->
+                <div class="nav-user flex-col gap-2 pb-2" id="nav-user-mobile" style="display:none;">
+                    <div style="display:flex; align-items:center; gap:0.75rem; padding:0.5rem 0;">
+                        <div class="user-avatar" id="user-avatar-mobile">?</div>
+                        <span id="user-label-mobile"
+                            style="font-size:0.875rem; font-weight:600; color:var(--color-on-surface);">Account</span>
+                    </div>
+                    <button id="logout-btn-mobile" class="btn btn-ghost btn-sm w-full">Logout</button>
                 </div>
 
             </div>
@@ -159,23 +462,20 @@
     </nav>
 
 
-    <!-- Main Content -->
-
+    <!-- ── Main Content ──────────────────────────────────────────── -->
     <main class="grow pb-18 md:pb-0">
 
-        <!-- ── Hero ──────────────────────────────────────────────── -->
+        <!-- Hero -->
         <section class="relative w-full min-h-135 md:min-h-150 flex items-center
                     bg-surface-container-high py-lg md:py-xl
                     px-margin-mobile md:px-margin-desktop overflow-hidden">
 
-            <!-- Background image with gradient overlay -->
             <div class="absolute inset-0 z-0">
                 <img src="./src/img/Fix-mate hero img.png" alt="Professional mechanic on the highway at dawn"
                     class="w-full h-full object-cover opacity-20" />
                 <div class="absolute inset-0 bg-linear-to-r from-background to-transparent opacity-90"></div>
             </div>
 
-            <!-- Hero content -->
             <div class="relative z-10 max-w-7xl w-full grid grid-cols-1 md:grid-cols-12 gap-md">
                 <div class="md:col-span-8 flex flex-col items-start gap-md">
 
@@ -201,7 +501,6 @@
                 </div>
             </div>
 
-            <!-- Mobile "Learn More" -->
             <button class="hidden md:flex absolute bottom-8 right-8
                      btn btn-ghost btn-sm gap-2 animate-hero-cta">
                 Learn More
@@ -209,7 +508,7 @@
             </button>
         </section>
 
-        <!-- ── How It Works ───────────────────────────────────────── -->
+        <!-- How It Works -->
         <section class="section-padding px-margin-mobile md:px-margin-desktop
                     bg-surface max-w-7xl mx-auto w-full scroll-mt-80" id="how-it-works">
 
@@ -221,7 +520,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-md reveal-stagger">
-                <!-- Step 1 -->
                 <div class="card card-hover flex flex-col items-center text-center reveal">
                     <div class="icon-badge mb-md">
                         <span class="material-symbols-outlined text-[32px]">location_on</span>
@@ -232,7 +530,6 @@
                     </p>
                 </div>
 
-                <!-- Step 2 -->
                 <div class="card card-hover flex flex-col items-center text-center reveal">
                     <div class="icon-badge mb-md">
                         <span class="material-symbols-outlined text-[32px]">handyman</span>
@@ -243,7 +540,6 @@
                     </p>
                 </div>
 
-                <!-- Step 3 -->
                 <div class="card card-hover flex flex-col items-center text-center reveal">
                     <div class="icon-badge mb-md">
                         <span class="material-symbols-outlined text-[32px]">check_circle</span>
@@ -256,7 +552,7 @@
             </div>
         </section>
 
-        <!-- ── Why Trust FixMate — Bento Grid ───────────────────── -->
+        <!-- Why Trust FixMate -->
         <section class="section-padding px-margin-mobile md:px-margin-desktop
                     bg-surface-container max-w-7xl mx-auto w-full
                     rounded-xl mb-xl">
@@ -265,16 +561,8 @@
                 <h2 class="text-headline-lg text-on-background">Why Trust FixMate?</h2>
             </div>
 
-            <!--
-        Breakpoint strategy:
-          mobile  (<640px)  : 1 column, auto height, stacked
-          tablet  (640–1023px): 2 columns, auto height, equal halves
-          desktop (≥1024px) : 12-column bento with fixed 200px rows
-      -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-md lg:auto-rows-[200px]">
 
-                <!-- Feature 1 — Verified Professionals
-             mobile/tablet: full width | desktop: 8 of 12 -->
                 <div class="card sm:col-span-2 lg:col-span-8 flex items-start gap-md
                     overflow-hidden relative reveal">
                     <div class="icon-badge-sm shrink-0">
@@ -292,9 +580,6 @@
                     </div>
                 </div>
 
-                <!-- Feature 2 — Fast Response
-             mobile: full width | tablet: right half | desktop: 4 of 12 -->
-                <!-- Update this line -->
                 <div class="card sm:col-span-2 lg:col-span-4 flex flex-col justify-between reveal">
                     <div class="icon-badge-sm">
                         <span class="material-symbols-outlined">timer</span>
@@ -307,8 +592,6 @@
                     </div>
                 </div>
 
-                <!-- Feature 3 — Smart Location Matching
-             mobile/tablet: full width | desktop: full 12 cols -->
                 <div class="card sm:col-span-2 lg:col-span-12 flex flex-col sm:flex-row
                     items-start sm:items-center justify-between gap-md reveal">
                     <div class="flex items-center gap-md">
@@ -332,7 +615,7 @@
             </div>
         </section>
 
-        <!-- ── About Us ───────────────────────────────────────────── -->
+        <!-- About Us -->
         <section class="section-padding px-margin-mobile md:px-margin-desktop
                     bg-surface max-w-7xl mx-auto w-full mb-xl scroll-mt-80" id="about-us">
 
@@ -349,7 +632,6 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-xl mb-xl reveal-stagger">
 
-                <!-- What We Do -->
                 <div class="flex flex-col gap-sm reveal">
                     <h3 class="text-headline-md text-primary flex items-center gap-2">
                         <span class="material-symbols-outlined">build</span> What we do
@@ -378,19 +660,16 @@
                     </ul>
                 </div>
 
-                <!-- Our Mission -->
                 <div class="flex flex-col gap-sm reveal">
                     <h3 class="text-headline-md text-primary flex items-center gap-2">
                         <span class="material-symbols-outlined">flag</span> Our mission
                     </h3>
                     <p class="text-body-md text-on-surface-variant mt-2">
                         To make reliable, fast roadside assistance accessible to everyone, everywhere,
-                        at any time. We believe no driver should feel stranded or vulnerable when a
-                        vehicle fails.
+                        at any time. We believe no driver should feel stranded or vulnerable when a vehicle fails.
                     </p>
                 </div>
 
-                <!-- Why FixMate Exists -->
                 <div class="flex flex-col gap-sm reveal">
                     <h3 class="text-headline-md text-primary flex items-center gap-2">
                         <span class="material-symbols-outlined">lightbulb</span> Why FixMate exists
@@ -402,22 +681,20 @@
                     </p>
                 </div>
 
-                <!-- For Mechanics -->
                 <div class="flex flex-col gap-sm reveal">
                     <h3 class="text-headline-md text-primary flex items-center gap-2">
                         <span class="material-symbols-outlined">group</span> For mechanics
                     </h3>
                     <p class="text-body-md text-on-surface-variant mt-2">
                         We empower automotive professionals by providing a platform to gain visibility,
-                        connect directly with drivers in need, and grow their local business without
-                        middleman delays.
+                        connect directly with drivers in need, and grow their local business without middleman delays.
                     </p>
                 </div>
 
             </div>
         </section>
 
-        <!-- ── Our Vision ─────────────────────────────────────────── -->
+        <!-- Our Vision -->
         <section class="section-padding px-margin-mobile md:px-margin-desktop
                     bg-surface-container-low max-w-7xl mx-auto w-full
                     rounded-xl mb-xl">
@@ -431,7 +708,6 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-md reveal-stagger">
 
-                <!-- Pillar 1 -->
                 <div class="card card-hover flex flex-col items-center text-center reveal">
                     <div class="icon-badge mb-md">
                         <span class="material-symbols-outlined text-[32px]">shield</span>
@@ -442,7 +718,6 @@
                     </p>
                 </div>
 
-                <!-- Pillar 2 -->
                 <div class="card card-hover flex flex-col items-center text-center reveal">
                     <div class="icon-badge mb-md">
                         <span class="material-symbols-outlined text-[32px]">near_me</span>
@@ -453,7 +728,6 @@
                     </p>
                 </div>
 
-                <!-- Pillar 3 -->
                 <div class="card card-hover flex flex-col items-center text-center reveal">
                     <div class="icon-badge mb-md">
                         <span class="material-symbols-outlined text-[32px]">handshake</span>
@@ -467,7 +741,7 @@
             </div>
         </section>
 
-        <!-- ── Join CTA ───────────────────────────────────────────── -->
+        <!-- Join CTA -->
         <section class="section-padding px-margin-mobile md:px-margin-desktop
                     bg-surface max-w-7xl mx-auto w-full mb-xl text-center">
 
@@ -489,8 +763,7 @@
     </main>
 
 
-    <!-- Bottom Nav — Mobile Only                                  -->
-
+    <!-- ── Bottom Nav — Mobile Only ──────────────────────────────── -->
     <nav class="fixed bottom-0 left-0 w-full z-50 md:hidden
               bg-surface-container-lowest/95 backdrop-blur-md
               border-t border-outline-variant rounded-t-2xl
@@ -509,7 +782,8 @@
             <span class="material-symbols-outlined">notifications</span>
             <span class="bottom-nav-label">Alerts</span>
         </button>
-        <button class="bottom-nav-item">
+        <!-- Profile tab: opens modal if guest, links to profile if logged in -->
+        <button class="bottom-nav-item" id="bottom-nav-profile">
             <span class="material-symbols-outlined">person</span>
             <span class="bottom-nav-label">Profile</span>
         </button>
@@ -517,8 +791,7 @@
     </nav>
 
 
-    <!-- Footer — Desktop Only                                     -->
-
+    <!-- ── Footer — Desktop Only ─────────────────────────────────── -->
     <footer class="hidden md:flex w-full border-t border-outline-variant
                  bg-surface-container-low py-12 px-6
                  flex-col items-center gap-4 text-center mt-auto">
@@ -533,12 +806,18 @@
         </nav>
 
         <p class="text-body-sm text-outline">
-            &copy; 2024 FixMate Emergency Services. Reliability Priority.
+            &copy; 2025 FixMate Emergency Services. Reliability Priority.
         </p>
 
     </footer>
 
-    <!-- Scripts      -->
+
+    <!--
+        ✅ LOAD ORDER:
+        1. Supabase CDN — exposes window.supabase for main.js auth state
+        2. main.js as module — handles all nav, scroll, and auth UI logic
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="./src/js/main.js"></script>
 
 </body>
