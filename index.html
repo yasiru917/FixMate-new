@@ -383,35 +383,36 @@
 
             <!-- Desktop: Nav Links -->
             <div class="hidden md:flex items-center gap-1">
-                <a href="#" class="nav-link nav-link-active">Find Mechanic</a>
+                <a href="#" class="nav-link">Find Mechanic</a>
                 <a href="#how-it-works" class="nav-link">How it works</a>
                 <a href="#" class="nav-link">Our Vision</a>
             </div>
 
             <!-- Desktop: Actions -->
             <div class="hidden md:flex items-center gap-3">
-                <button class="btn btn-sos btn-sm animate-sos-pulse">SOS Emergency</button>
 
                 <!-- GUEST state -->
-                <div class="nav-guest" id="nav-guest-desktop">
+                <div class="nav-guest" id="nav-guest-desktop" style="display:flex; align-items:center; gap:0.5rem;">
                     <button id="login-btn-desktop" class="btn btn-ghost btn-sm">Login</button>
+                    <a href="Signup.html" class="btn btn-primary btn-sm">Sign Up</a>
                 </div>
 
-                <!-- USER state -->
-                <div class="nav-user" id="nav-user-desktop" style="display:none; align-items:center; gap:0.75rem;">
+                <!-- USER state — avatar chip only, no email text, keeps nav width stable -->
+                <div class="nav-user" id="nav-user-desktop"
+                    style="display:none; align-items:center; gap:1rem; flex-shrink:0;">
                     <span
-                        class="material-symbols-outlined text-outline cursor-pointer hover:text-primary transition-colors select-none">notifications</span>
-                    <button class="user-chip" id="user-chip-desktop">
+                        class="material-symbols-outlined text-outline cursor-pointer hover:text-primary transition-colors select-none"
+                        style="font-size:22px;">notifications</span>
+                    <button id="user-chip-desktop" aria-label="My profile" class="user-chip" style="padding:0.2rem;">
                         <div class="user-avatar" id="user-avatar-desktop">?</div>
-                        <span id="user-label-desktop">Account</span>
                     </button>
-                    <button id="logout-btn-desktop" class="btn btn-ghost btn-sm">Logout</button>
+                    <button id="logout-btn-desktop" class="btn btn-ghost btn-sm"
+                        style="white-space:nowrap;">Logout</button>
                 </div>
             </div>
 
-            <!-- Mobile: SOS + Hamburger -->
-            <div class="flex md:hidden items-center gap-2">
-                <button class="btn btn-sos btn-sm animate-sos-pulse text-sm px-3">SOS</button>
+            <!-- Mobile: Hamburger only -->
+            <div class="flex md:hidden items-center">
                 <button id="hamburger-btn" aria-label="Open navigation menu" aria-expanded="false"
                     aria-controls="mobile-drawer" class="w-10 h-10 flex flex-col items-center justify-center gap-1.25
                        rounded-lg text-on-surface hover:bg-surface-container
@@ -434,7 +435,7 @@
                 border-t border-outline-variant bg-surface-container-lowest">
             <div class="page-container py-4 flex flex-col gap-1">
 
-                <a href="#" class="nav-link nav-link-active py-3 rounded-lg block">Find Mechanic</a>
+                <a href="#" class="nav-link py-3 rounded-lg block">Find Mechanic</a>
                 <a href="#how-it-works" class="nav-link py-3 rounded-lg block">How it works</a>
                 <a href="#about-us" class="nav-link py-3 rounded-lg block">Our Vision</a>
 
@@ -448,11 +449,17 @@
 
                 <!-- USER state -->
                 <div class="nav-user flex-col gap-2 pb-2" id="nav-user-mobile" style="display:none;">
-                    <div style="display:flex; align-items:center; gap:0.75rem; padding:0.5rem 0;">
-                        <div class="user-avatar" id="user-avatar-mobile">?</div>
-                        <span id="user-label-mobile"
-                            style="font-size:0.875rem; font-weight:600; color:var(--color-on-surface);">Account</span>
+                    <div style="display:flex; align-items:center; gap:0.75rem; padding:0.5rem 0; min-width:0;">
+                        <div class="user-avatar" id="user-avatar-mobile" style="flex-shrink:0;">?</div>
+                        <div style="min-width:0;">
+                            <p style="font-size:0.7rem; color:var(--color-on-surface-variant); margin:0;">Signed in as
+                            </p>
+                            <p id="user-label-mobile"
+                                style="font-size:0.8125rem; font-weight:600; color:var(--color-on-surface); margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                Account</p>
+                        </div>
                     </div>
+                    <a href="profile.html" class="btn btn-outline btn-sm w-full text-center">My Profile</a>
                     <button id="logout-btn-mobile" class="btn btn-ghost btn-sm w-full">Logout</button>
                 </div>
 

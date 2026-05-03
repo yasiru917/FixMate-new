@@ -23,9 +23,9 @@ function applyAuthState(session) {
     document
       .querySelectorAll(".user-avatar")
       .forEach((el) => (el.textContent = initials));
-    document
-      .querySelectorAll("[id^='user-label-']")
-      .forEach((el) => (el.textContent = label));
+    // Only update the mobile drawer label (desktop nav shows avatar initial only)
+    const mobileLabel = document.getElementById("user-label-mobile");
+    if (mobileLabel) mobileLabel.textContent = label;
   } else {
     // Show guest UI, hide user UI
     // Use "flex" explicitly — clearing to "" would fall back to CSS `.nav-guest { display:none }`
