@@ -350,8 +350,6 @@
     .nav-link-active {
         color: var(--color-primary);
         font-weight: 700;
-        border-bottom: 2px solid var(--color-primary);
-        padding-bottom: calc(0.5rem - 2px);
     }
 
     /* ── Bottom Nav Item ── */
