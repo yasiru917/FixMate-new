@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FixMate — Become a Mechanic</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Inter:wght@400;600&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="./src/output.css" />
+
+  <style>
+    :root {
+      --primary: #003d9b;
+      --primary-light: #4f7cff;
+      --surface: #f8faff;
+      --card: #ffffff;
+      --outline: rgba(0,0,0,0.1);
+      --text: #0d1b2a;
+      --text-muted: #5a6a7a;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: "Inter", sans-serif; background: var(--surface); color: var(--text); margin: 0; }
+
+    /* ── Toast ─────────────────────────────────────────────── */
+    .toast {
+      position: fixed; top: 1.25rem; left: 50%; transform: translateX(-50%);
+      z-index: 999; display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.625rem 1.25rem; border-radius: 9999px;
+      font-size: 0.875rem; font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+      transition: opacity 0.3s, transform 0.3s; white-space: nowrap;
+    }
+    .toast-success { background: var(--primary); color: #fff; }
+    .toast-error   { background: #c0392b; color: #fff; }
+    .toast-hidden  { opacity:0; pointer-events:none; transform:translateX(-50%) translateY(-10px); }
+
+    /* ── Nav ────────────────────────────────────────────────── */
+    .top-nav {
+      position: sticky; top: 0; z-index: 50;
+      background: #fff; border-bottom: 1px solid var(--outline);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem; height: 64px;
+    }
+    .nav-brand {
+      font-family: "Manrope", sans-serif; font-size: 1.25rem; font-weight: 700;
+      color: var(--primary); text-decoration: none;
+    }
+    .nav-actions { display: flex; align-items: center; gap: 0.5rem; }
+    .btn-nav {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: none; border: 1px solid transparent; cursor: pointer;
+      text-decoration: none; font-size: 0.875rem; font-weight: 600;
+      font-family: "Inter", sans-serif; color: var(--text-muted);
+      padding: 0.4rem 0.875rem; border-radius: 9999px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-nav:hover { background: #f0f4ff; color: var(--primary); }
+    .btn-cta {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: var(--primary); color: #fff; border: none; cursor: pointer;
+      text-decoration: none; font-size: 0.875rem; font-weight: 700;
+      font-family: "Inter", sans-serif; padding: 0.45rem 1.1rem;
+      border-radius: 9999px; transition: background 0.15s;
+    }
+    .btn-cta:hover { background: #002f78; }
+
+    /* ── Layout helpers ─────────────────────────────────────── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+    .section    { padding: 5rem 0; }
+    .section-sm { padding: 3.5rem 0; }
+    @media (max-width: 640px) { .section { padding: 3rem 0; } .section-sm { padding: 2.25rem 0; } }
+
+    .eyebrow {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--primary-light); margin-bottom: 0.75rem;
+    }
+    h2.stitle {
+      font-family: "Manrope", sans-serif;
+      font-size: clamp(1.625rem, 3.5vw, 2.25rem); font-weight: 800;
+      line-height: 1.2; color: var(--text); margin: 0 0 0.875rem;
+    }
+    p.ssub { font-size: 1.0rem; color: var(--text-muted); line-height: 1.7; max-width: 580px; }
+
+    /* ── HERO ───────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, #001845 0%, #003d9b 55%, #1a56d6 100%);
+      color: #fff; position: relative; overflow: hidden; padding: 6rem 0 5rem;
+    }
+    .hero::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-chip {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.9); font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 0.3rem 0.875rem; border-radius: 9999px; margin-bottom: 1.5rem;
+    }
+    h1.hero-title {
+      font-family: "Manrope", sans-serif;
+      font-size: clamp(2rem, 6vw, 3.5rem); font-weight: 800;
+      line-height: 1.1; margin: 0 0 1.25rem; color: #fff; max-width: 680px;
+    }
+    p.hero-sub {
+      font-size: clamp(1rem, 2vw, 1.125rem); color: rgba(255,255,255,0.82);
+      line-height: 1.7; max-width: 540px; margin: 0 0 0.875rem;
+    }
+    p.hero-intro {
+      font-size: 0.9375rem; color: rgba(255,255,255,0.62);
+      line-height: 1.75; max-width: 520px; margin: 0 0 2.5rem;
+    }
+    a.btn-hero {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: #fff; color: var(--primary);
+      font-size: 1rem; font-weight: 700; font-family: "Manrope", sans-serif;
+      padding: 0.875rem 2rem; border-radius: 9999px; text-decoration: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    a.btn-hero:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.28); }
+    .hero-stats {
+      display: flex; gap: 2.5rem; flex-wrap: wrap;
+      margin-top: 3.5rem; padding-top: 2.5rem;
+      border-top: 1px solid rgba(255,255,255,0.15);
+    }
+    .hstat-val { font-family: "Manrope", sans-serif; font-size: 2rem; font-weight: 800; color: #fff; }
+    .hstat-lbl { font-size: 0.8rem; color: rgba(255,255,255,0.58); margin-top: 0.15rem; }
+
+    /* ── WHY JOIN ────────────────────────────────────────────── */
+    .why-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1.25rem; margin-top: 3rem;
+    }
+    .why-card {
+      background: var(--card); border: 1px solid var(--outline);
+      border-radius: 1rem; padding: 1.75rem;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .why-card:hover { box-shadow: 0 8px 28px rgba(0,61,155,0.1); transform: translateY(-3px); }
+    .why-icon { font-size: 2rem; margin-bottom: 1.1rem; }
+    .why-title { font-family: "Manrope", sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text); }
+    .why-desc  { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; }
+
+    /* ── HOW IT WORKS ────────────────────────────────────────── */
+    .how-wrap { background: linear-gradient(180deg, #eef2ff 0%, var(--surface) 100%); }
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1.25rem; margin-top: 3rem;
+    }
+    .step-card {
+      background: var(--card); border: 1px solid var(--outline);
+      border-radius: 1rem; padding: 1.75rem;
+    }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 9999px;
+      background: var(--primary); color: #fff;
+      font-family: "Manrope", sans-serif; font-size: 1.125rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;
+    }
+    .step-title { font-family: "Manrope", sans-serif; font-size: 0.9375rem; font-weight: 700; margin-bottom: 0.35rem; color: var(--text); }
+    .step-desc  { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; }
+
+    /* ── WHO CAN APPLY ───────────────────────────────────────── */
+    .who-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.875rem; margin-top: 2.5rem;
+    }
+    @media (max-width: 540px) { .who-grid { grid-template-columns: 1fr; } }
+    .who-item {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      background: var(--card); border: 1px solid var(--outline);
+      border-radius: 0.875rem; padding: 1.125rem 1.25rem;
+    }
+    .who-check {
+      width: 24px; height: 24px; border-radius: 9999px;
+      background: #e8f5e9; color: #2e7d32; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; margin-top: 0.1rem;
+    }
+    .who-text { font-size: 0.9rem; color: var(--text); line-height: 1.55; }
+
+    /* ── FORM SECTION ────────────────────────────────────────── */
+    .form-section {
+      background: linear-gradient(135deg, #001845 0%, #003d9b 100%);
+      padding: 5rem 1.5rem;
+    }
+    .form-card {
+      background: #fff; border-radius: 1.25rem; max-width: 700px; margin: 0 auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.22); overflow: hidden;
+    }
+    .form-accent { height: 5px; background: linear-gradient(90deg, #003d9b, #4f7cff); }
+    .form-body { padding: 2.25rem 2.25rem 2rem; }
+    @media (max-width: 500px) { .form-body { padding: 1.5rem 1.25rem; } }
+    h3.form-title {
+      font-family: "Manrope", sans-serif; font-size: 1.5rem; font-weight: 800;
+      color: var(--text); margin: 0 0 0.35rem;
+    }
+    p.form-sub { font-size: 0.9rem; color: var(--text-muted); margin: 0 0 2rem; }
+
+    /* Fields */
+    .f  { display: flex; flex-direction: column; gap: 0.35rem; }
+    .fr { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 500px) { .fr { grid-template-columns: 1fr; } }
+    .form-gap { display: flex; flex-direction: column; gap: 1.1rem; }
+    label.lbl { font-size: 0.8125rem; font-weight: 600; color: #444; }
+    .inp, .sel, .tarea {
+      width: 100%; padding: 0.65rem 0.875rem;
+      border: 1.5px solid rgba(0,0,0,0.15); border-radius: 0.5rem;
+      font-size: 0.9375rem; font-family: "Inter", sans-serif;
+      color: var(--text); background: #fff; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .inp:focus, .sel:focus, .tarea:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,61,155,0.12);
+    }
+    .sel {
+      appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 0.9rem center; padding-right: 2.5rem;
+    }
+    .tarea { resize: vertical; min-height: 96px; }
+    .ferr  { font-size: 0.75rem; color: #c0392b; min-height: 1rem; }
+
+    /* Radio pills */
+    .radio-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .radio-pill {
+      display: flex; align-items: center; gap: 0.45rem;
+      padding: 0.5rem 1rem; border-radius: 0.5rem;
+      border: 1.5px solid rgba(0,0,0,0.15); cursor: pointer;
+      font-size: 0.875rem; font-weight: 600; color: var(--text);
+      transition: border-color 0.15s, background 0.15s; user-select: none;
+    }
+    .radio-pill input { accent-color: var(--primary); width: 15px; height: 15px; cursor: pointer; }
+    .radio-pill:has(input:checked) { border-color: var(--primary); background: #f0f4ff; color: var(--primary); }
+
+    .btn-submit {
+      width: 100%; padding: 0.875rem;
+      background: var(--primary); color: #fff;
+      font-size: 1rem; font-weight: 700; font-family: "Manrope", sans-serif;
+      border: none; border-radius: 0.625rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .btn-submit:hover:not(:disabled) { background: #002f78; transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+
+    /* ── CLOSING ─────────────────────────────────────────────── */
+    .closing {
+      background: #fff; border-top: 1px solid var(--outline);
+      text-align: center; padding: 4.5rem 1.5rem;
+    }
+    .closing-icon { font-size: 44px; color: var(--primary); margin-bottom: 1rem; }
+    .closing-title {
+      font-family: "Manrope", sans-serif; font-weight: 800; color: var(--primary);
+      font-size: clamp(1.2rem, 3vw, 1.625rem); margin-bottom: 0.875rem;
+    }
+    .closing-sub { font-size: 0.9375rem; color: var(--text-muted); max-width: 480px; margin: 0 auto 2rem; line-height: 1.65; }
+    .closing-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-outline-dark {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      border: 1.5px solid var(--outline); background: none; cursor: pointer;
+      text-decoration: none; font-size: 0.9rem; font-weight: 600;
+      font-family: "Inter", sans-serif; color: var(--text-muted);
+      padding: 0.5rem 1.25rem; border-radius: 9999px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-outline-dark:hover { background: #f0f4ff; color: var(--primary); border-color: var(--primary); }
+  </style>
+</head>
+
+<body>
+
+  <!-- Toast -->
+  <div id="toast" class="toast toast-hidden" role="alert" aria-live="polite">
+    <span id="toast-icon"></span>
+    <span id="toast-msg"></span>
+  </div>
+
+  <!-- ── Nav ──────────────────────────────────────────────────── -->
+  <nav class="top-nav">
+    <a href="index.html" class="nav-brand">FixMate</a>
+    <div class="nav-actions">
+      <a href="index.html" class="btn-nav">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
+        </svg>
+        Home
+      </a>
+      <a href="#apply-form" class="btn-cta">
+        <span class="material-symbols-outlined" style="font-size:16px;">edit_note</span>
+        Apply Now
+      </a>
+    </div>
+  </nav>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       HERO
+  ══════════════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="container" style="position:relative; z-index:1;">
+
+      <div class="hero-chip">
+        <span class="material-symbols-outlined" style="font-size:14px;">construction</span>
+        For Mechanics &amp; Garages
+      </div>
+
+      <h1 class="hero-title">Become a FixMate Mechanic</h1>
+
+      <p class="hero-sub">
+        Turn your skills into steady income. Join a network that connects you directly
+        with drivers who need help — anytime, anywhere.
+      </p>
+      <p class="hero-intro">
+        At FixMate, we're building a reliable roadside assistance network across the country.
+        If you're a skilled mechanic who wants more customers without chasing them,
+        this is your opportunity.
+      </p>
+
+      <a href="#apply-form" class="btn-hero">
+        <span class="material-symbols-outlined" style="font-size:20px;">edit_note</span>
+        Apply Now — It's Free
+      </a>
+
+      <div class="hero-stats">
+        <div><div class="hstat-val">24/7</div><div class="hstat-lbl">Job requests, any time</div></div>
+        <div><div class="hstat-val">0%</div><div class="hstat-lbl">Commission on first month</div></div>
+        <div><div class="hstat-val">100%</div><div class="hstat-lbl">You control your schedule</div></div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       WHY JOIN
+  ══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="container">
+      <div class="eyebrow">Benefits</div>
+      <h2 class="stitle">Why Partner With Us?</h2>
+      <p class="ssub">We handle the hard part — finding customers. You focus on what you do best.</p>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <div class="why-icon">🔧</div>
+          <div class="why-title">More Job Opportunities</div>
+          <p class="why-desc">Get connected with customers near your location who need immediate help. No more waiting around for work.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">📍</div>
+          <div class="why-title">Location-Based Requests</div>
+          <p class="why-desc">We send you jobs based on your current location, so you don't waste time or fuel travelling unnecessarily.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">💰</div>
+          <div class="why-title">Earn on Your Terms</div>
+          <p class="why-desc">Accept or reject jobs as you like. You stay in full control of your schedule and workload at all times.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">📱</div>
+          <div class="why-title">Simple &amp; Smart System</div>
+          <p class="why-desc">Receive requests, contact customers, and manage your jobs — all from your phone with no extra equipment.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       HOW IT WORKS
+  ══════════════════════════════════════════════════════════ -->
+  <div class="how-wrap">
+    <section class="section">
+      <div class="container">
+        <div class="eyebrow">Process</div>
+        <h2 class="stitle">How It Works</h2>
+        <p class="ssub">Four simple steps from sign-up to your first job.</p>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <div class="step-title">Sign Up</div>
+            <p class="step-desc">Fill out the form below with your details, experience, and vehicle specialties.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <div class="step-title">Get Verified</div>
+            <p class="step-desc">Our team reviews your information to ensure quality and reliability for our customers.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <div class="step-title">Start Receiving Jobs</div>
+            <p class="step-desc">Once approved, you'll start receiving real-time service requests from nearby customers.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">4</div>
+            <div class="step-title">Help &amp; Earn</div>
+            <p class="step-desc">Complete jobs, get paid, and build your reputation on the FixMate platform.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       WHO CAN APPLY
+  ══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="container">
+      <div class="eyebrow">Eligibility</div>
+      <h2 class="stitle">Who Can Join?</h2>
+      <p class="ssub">FixMate is open to a wide range of automotive professionals.</p>
+
+      <div class="who-grid">
+        <div class="who-item">
+          <div class="who-check"><span class="material-symbols-outlined" style="font-size:14px;">check</span></div>
+          <span class="who-text">Experienced vehicle mechanics — cars, bikes, vans, and more</span>
+        </div>
+        <div class="who-item">
+          <div class="who-check"><span class="material-symbols-outlined" style="font-size:14px;">check</span></div>
+          <span class="who-text">Individuals or small garage owners looking for more customers</span>
+        </div>
+        <div class="who-item">
+          <div class="who-check"><span class="material-symbols-outlined" style="font-size:14px;">check</span></div>
+          <span class="who-text">Must have basic tools required for roadside repairs</span>
+        </div>
+        <div class="who-item">
+          <div class="who-check"><span class="material-symbols-outlined" style="font-size:14px;">check</span></div>
+          <span class="who-text">Must be reachable by phone when marked as available</span>
+        </div>
+        <div class="who-item">
+          <div class="who-check"><span class="material-symbols-outlined" style="font-size:14px;">check</span></div>
+          <span class="who-text">Responsible, professional attitude and good communication</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       APPLICATION FORM
+  ══════════════════════════════════════════════════════════ -->
+  <section class="form-section" id="apply-form">
+    <div class="form-card">
+      <div class="form-accent"></div>
+      <div class="form-body">
+        <h3 class="form-title">Apply Now</h3>
+        <p class="form-sub">Fill in your details below and we'll get back to you shortly.</p>
+
+        <form id="mechanic-form" novalidate>
+          <div class="form-gap">
+
+            <!-- Row 1: Name + Phone -->
+            <div class="fr">
+              <div class="f">
+                <label class="lbl" for="m-name">Full Name</label>
+                <input id="m-name" type="text" placeholder="e.g. John Silva" class="inp" />
+                <p class="ferr" id="err-name"></p>
+              </div>
+              <div class="f">
+                <label class="lbl" for="m-phone">Phone Number</label>
+                <input id="m-phone" type="tel" placeholder="+94 77 000 0000" class="inp" />
+                <p class="ferr" id="err-phone"></p>
+              </div>
+            </div>
+
+            <!-- Row 2: Email + City -->
+            <div class="fr">
+              <div class="f">
+                <label class="lbl" for="m-email">Email Address</label>
+                <input id="m-email" type="email" placeholder="you@example.com" class="inp" />
+                <p class="ferr" id="err-email"></p>
+              </div>
+              <div class="f">
+                <label class="lbl" for="m-city">City / Area</label>
+                <input id="m-city" type="text" placeholder="e.g. Colombo, Kandy" class="inp" />
+                <p class="ferr" id="err-city"></p>
+              </div>
+            </div>
+
+            <!-- Row 3: Experience + Vehicles -->
+            <div class="fr">
+              <div class="f">
+                <label class="lbl" for="m-exp">Years of Experience</label>
+                <select id="m-exp" class="sel">
+                  <option value="">Select range</option>
+                  <option value="less_than_1">Less than 1 year</option>
+                  <option value="1_3">1 – 3 years</option>
+                  <option value="3_5">3 – 5 years</option>
+                  <option value="5_10">5 – 10 years</option>
+                  <option value="10_plus">10+ years</option>
+                </select>
+                <p class="ferr" id="err-exp"></p>
+              </div>
+              <div class="f">
+                <label class="lbl" for="m-vehicles">Vehicle Types You Handle</label>
+                <select id="m-vehicles" class="sel">
+                  <option value="">Select type</option>
+                  <option value="cars">Cars only</option>
+                  <option value="bikes">Bikes only</option>
+                  <option value="cars_bikes">Cars &amp; Bikes</option>
+                  <option value="all">All vehicle types</option>
+                </select>
+                <p class="ferr" id="err-vehicles"></p>
+              </div>
+            </div>
+
+            <!-- Own tools -->
+            <div class="f">
+              <label class="lbl">Do You Have Your Own Tools?</label>
+              <div class="radio-group">
+                <label class="radio-pill">
+                  <input type="radio" name="own-tools" value="yes" /> Yes, I have my own tools
+                </label>
+                <label class="radio-pill">
+                  <input type="radio" name="own-tools" value="no" /> No, I need tools
+                </label>
+              </div>
+              <p class="ferr" id="err-tools"></p>
+            </div>
+
+            <!-- Description -->
+            <div class="f">
+              <label class="lbl" for="m-desc">
+                Short Description
+                <span style="color:#aaa; font-weight:400;">(optional)</span>
+              </label>
+              <textarea id="m-desc" class="tarea"
+                placeholder="Tell us about your skills, experience, or any specialties…"></textarea>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" id="submit-btn" class="btn-submit">
+              <span class="material-symbols-outlined" style="font-size:20px;">send</span>
+              Submit Application
+            </button>
+
+          </div><!-- /form-gap -->
+        </form>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       CLOSING
+  ══════════════════════════════════════════════════════════ -->
+  <section class="closing">
+    <div class="material-symbols-outlined closing-icon">handshake</div>
+    <h2 class="closing-title">
+      Join FixMate and be part of a growing network<br>that keeps drivers moving.
+    </h2>
+    <p class="closing-sub">
+      Whether you're just starting out or have decades of experience,
+      there's a place for you on the FixMate platform.
+    </p>
+    <div class="closing-actions">
+      <a href="#apply-form" class="btn-cta" style="font-size:0.9375rem; padding:0.6rem 1.5rem;">
+        Apply Now
+      </a>
+      <a href="index.html" class="btn-outline-dark">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
+        </svg>
+        Back to Home
+      </a>
+    </div>
+  </section>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./src/js/become-a-mechanic.js"></script>
+
+</body>
+</html>

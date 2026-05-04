@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FixMate — Find a Mechanic</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+    rel="stylesheet" />
+
+  <!-- Leaflet (free, no token needed) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <link rel="stylesheet" href="./src/output.css" />
+
+  <style>
+    :root {
+      --primary: #003d9b;
+      --primary-lt: #4f7cff;
+      --surface: #f4f6fb;
+      --card: #ffffff;
+      --outline: rgba(0, 0, 0, 0.09);
+      --text: #0d1b2a;
+      --muted: #5a6a7a;
+      --green: #1b8a4e;
+      --red: #c0392b;
+      --whatsapp: #25d366;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: var(--surface);
+      color: var(--text);
+      margin: 0;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ════ NAV ════════════════════════════════════════════════ */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #fff;
+      border-bottom: 1px solid var(--outline);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      height: 60px;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .nav-brand {
+      font-family: "Manrope", sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .btn-back {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--muted);
+      padding: 0.4rem 0.75rem;
+      border-radius: 9999px;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-back:hover {
+      background: #f0f4ff;
+      color: var(--primary);
+    }
+
+    /* ════ STEP INDICATOR ═════════════════════════════════════ */
+    .step-bar {
+      background: #fff;
+      border-bottom: 1px solid var(--outline);
+      padding: 0.875rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-shrink: 0;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex: 1;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .step-item:not(.active) {
+      opacity: 0.4;
+    }
+
+    .step-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 9999px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: "Manrope", sans-serif;
+      background: var(--outline);
+      color: var(--muted);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .step-item.active .step-circle {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .step-item.done .step-circle {
+      background: #e8f5e9;
+      color: var(--green);
+    }
+
+    .step-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .step-connector {
+      flex: 0 0 1.5rem;
+      height: 2px;
+      background: var(--outline);
+      margin: 0 0.25rem;
+    }
+
+    .step-connector.done {
+      background: var(--primary);
+    }
+
+    /* ════ MAIN LAYOUT ════════════════════════════════════════ */
+    .page-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Each step panel */
+    .step-panel {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .step-panel.active {
+      display: flex;
+    }
+
+    /* ════ STEP 1 — LOCATION ══════════════════════════════════ */
+    #step1 {
+      position: relative;
+    }
+
+    #map {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      min-height: 0;
+      background: #d4e5ff;
+    }
+
+    /* Map overlay card */
+    .map-overlay {
+      position: absolute;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 2rem);
+      max-width: 420px;
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+      padding: 1.25rem;
+      z-index: 1000;
+    }
+
+    .map-overlay h3 {
+      font-family: "Manrope", sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0 0 0.25rem;
+      color: var(--text);
+    }
+
+    .map-overlay p {
+      font-size: 0.8375rem;
+      color: var(--muted);
+      margin: 0 0 1rem;
+      line-height: 1.5;
+    }
+
+    .location-display {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      background: #f0f4ff;
+      border-radius: 0.625rem;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      min-height: 44px;
+    }
+
+    .location-display .material-symbols-outlined {
+      color: var(--primary);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    #location-text {
+      font-size: 0.8375rem;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .btn-locate {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 0.625rem;
+      padding: 0.75rem;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      font-family: "Manrope", sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-bottom: 0.75rem;
+    }
+
+    .btn-locate:hover:not(:disabled) {
+      background: #002f78;
+    }
+
+    .btn-locate:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .btn-next-loc {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: var(--primary-lt);
+      color: #fff;
+      border: none;
+      border-radius: 0.625rem;
+      padding: 0.625rem;
+      font-size: 0.875rem;
+      font-weight: 700;
+      font-family: "Manrope", sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .btn-next-loc.ready {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .btn-next-loc.ready:hover {
+      background: #3a6aee;
+    }
+
+    /* ════ STEP 2 — PROBLEM ═══════════════════════════════════ */
+    .problem-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+    }
+
+    .problem-card {
+      background: var(--card);
+      border: 1px solid var(--outline);
+      border-radius: 1rem;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .prob-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--outline);
+    }
+
+    .prob-tab {
+      flex: 1;
+      padding: 0.875rem 0.5rem;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--muted);
+      transition: color 0.15s, border-bottom 0.15s;
+      border-bottom: 2px solid transparent;
+      font-family: "Inter", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .prob-tab .material-symbols-outlined {
+      font-size: 20px;
+    }
+
+    .prob-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .prob-tab-panel {
+      display: none;
+      padding: 1.25rem;
+    }
+
+    .prob-tab-panel.active {
+      display: block;
+    }
+
+    /* Know the problem tab */
+    .prob-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .prob-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid var(--outline);
+      border-radius: 0.625rem;
+      font-size: 0.9375rem;
+      font-family: "Inter", sans-serif;
+      color: var(--text);
+      outline: none;
+      background: var(--surface);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .prob-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 61, 155, 0.1);
+    }
+
+    .prob-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.875rem;
+    }
+
+    .prob-tag {
+      padding: 0.35rem 0.875rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid var(--outline);
+      background: #fff;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+
+    .prob-tag.selected {
+      background: #f0f4ff;
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* Quiz tab */
+    .quiz-q {
+      font-family: "Manrope", sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      margin-bottom: 0.875rem;
+      color: var(--text);
+    }
+
+    .quiz-progress {
+      height: 4px;
+      background: var(--outline);
+      border-radius: 9999px;
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+    }
+
+    .quiz-bar {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 9999px;
+      transition: width 0.3s ease;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+    }
+
+    .quiz-opt {
+      padding: 0.75rem 1rem;
+      border-radius: 0.625rem;
+      border: 1.5px solid var(--outline);
+      background: #fff;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      font-family: "Inter", sans-serif;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .quiz-opt:hover {
+      border-color: var(--primary-lt);
+      background: #f8faff;
+    }
+
+    .quiz-opt.chosen {
+      border-color: var(--primary);
+      background: #f0f4ff;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .quiz-opt .opt-icon {
+      font-size: 1.25rem;
+    }
+
+    .quiz-nav {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .btn-quiz {
+      flex: 1;
+      padding: 0.625rem;
+      border-radius: 0.625rem;
+      border: 1.5px solid var(--outline);
+      background: #fff;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: "Inter", sans-serif;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+
+    .btn-quiz.primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .btn-quiz.primary:hover {
+      background: #002f78;
+    }
+
+    .btn-quiz:hover:not(.primary) {
+      background: #f0f4ff;
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    #quiz-result {
+      display: none;
+      padding: 1rem;
+      background: #f0f4ff;
+      border-radius: 0.625rem;
+      font-size: 0.875rem;
+      color: var(--primary);
+      font-weight: 600;
+      margin-top: 0.75rem;
+      border: 1px solid rgba(0, 61, 155, 0.15);
+      line-height: 1.5;
+    }
+
+    /* Upload tab */
+    .upload-zone {
+      border: 2px dashed var(--outline);
+      border-radius: 0.875rem;
+      padding: 2rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: var(--surface);
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--primary);
+      background: #f0f4ff;
+    }
+
+    .upload-icon {
+      font-size: 2.5rem;
+      color: var(--primary-lt);
+      margin-bottom: 0.75rem;
+    }
+
+    .upload-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+
+    .upload-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .preview-img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 0.5rem;
+      border: 1px solid var(--outline);
+    }
+
+    /* Step 2 footer */
+    .prob-footer {
+      padding: 1rem 1.25rem;
+      background: #fff;
+      border-top: 1px solid var(--outline);
+      display: flex;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .btn-find {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 0.625rem;
+      padding: 0.8125rem;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      font-family: "Manrope", sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-find:hover {
+      background: #002f78;
+    }
+
+    /* ════ STEP 3 — RESULTS ═══════════════════════════════════ */
+    .results-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .results-title {
+      font-family: "Manrope", sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .results-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .sort-select {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--primary);
+      border: 1px solid var(--outline);
+      border-radius: 0.5rem;
+      padding: 0.3rem 0.6rem;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* Mechanic card */
+    .mech-card {
+      background: var(--card);
+      border: 1px solid var(--outline);
+      border-radius: 1rem;
+      padding: 1.125rem;
+      margin-bottom: 0.875rem;
+      transition: box-shadow 0.2s;
+    }
+
+    .mech-card:hover {
+      box-shadow: 0 4px 20px rgba(0, 61, 155, 0.1);
+    }
+
+    .mech-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.875rem;
+    }
+
+    .mech-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 9999px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Manrope", sans-serif;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .mech-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .mech-name {
+      font-family: "Manrope", sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .mech-spec {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.15rem;
+    }
+
+    .mech-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .mech-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+    }
+
+    .badge-avail {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .badge-busy {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .badge-dist {
+      background: #f0f4ff;
+      color: var(--primary);
+    }
+
+    .badge-rating {
+      background: #fffde7;
+      color: #f57f17;
+    }
+
+    .mech-divider {
+      height: 1px;
+      background: var(--outline);
+      margin: 0.875rem 0;
+    }
+
+    .mech-actions {
+      display: flex;
+      gap: 0.625rem;
+    }
+
+    .btn-wa {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: var(--whatsapp);
+      color: #fff;
+      border: none;
+      border-radius: 0.625rem;
+      padding: 0.625rem;
+      font-size: 0.875rem;
+      font-weight: 700;
+      font-family: "Manrope", sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .btn-wa:hover {
+      background: #1da84e;
+    }
+
+    .btn-call {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: #fff;
+      color: var(--primary);
+      border: 1.5px solid var(--primary);
+      border-radius: 0.625rem;
+      padding: 0.625rem;
+      font-size: 0.875rem;
+      font-weight: 700;
+      font-family: "Manrope", sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .btn-call:hover {
+      background: #f0f4ff;
+    }
+
+    /* WhatsApp SVG icon */
+    .wa-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    /* Loading state */
+    .loading-card {
+      background: var(--card);
+      border-radius: 1rem;
+      padding: 2rem;
+      text-align: center;
+      border: 1px solid var(--outline);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--outline);
+      border-top-color: var(--primary);
+      border-radius: 9999px;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* No results */
+    .no-results {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .no-results .material-symbols-outlined {
+      font-size: 3rem;
+      color: var(--outline);
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+
+    /* ════ TOAST ══════════════════════════════════════════════ */
+    .toast {
+      position: fixed;
+      top: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.25rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .toast-info {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .toast-success {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .toast-error {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .toast-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-50%) translateY(-10px);
+    }
+
+    /* ════ LEAFLET MARKER STYLES ═════════════════════════════ */
+    .user-pulse-marker {
+      background: none;
+      border: none;
+    }
+
+    .pulse-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 9999px;
+      background: #003d9b;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 4px rgba(0, 61, 155, 0.25), 0 2px 8px rgba(0, 0, 0, 0.3);
+      animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 4px rgba(0, 61, 155, 0.25), 0 2px 8px rgba(0, 0, 0, 0.3)
+      }
+
+      50% {
+        box-shadow: 0 0 0 10px rgba(0, 61, 155, 0.1), 0 2px 8px rgba(0, 0, 0, 0.3)
+      }
+    }
+
+    .mech-map-pin {
+      background: none;
+      border: none;
+    }
+
+    .mech-pin {
+      width: 36px;
+      height: 36px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: "Manrope", sans-serif;
+      font-size: 0.7rem;
+      font-weight: 800;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* ════ RESPONSIVE TWEAKS ══════════════════════════════════ */
+    @media (min-width: 768px) {
+      #map {
+        min-height: 420px;
+      }
+
+      .map-overlay {
+        bottom: 2rem;
+      }
+
+      .problem-wrap,
+      .results-wrap {
+        max-width: 680px;
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Toast -->
+  <div id="toast" class="toast toast-hidden" role="alert" aria-live="polite">
+    <span id="toast-msg"></span>
+  </div>
+
+  <!-- ════ NAV ════════════════════════════════════════════════ -->
+  <nav class="top-nav">
+    <a href="index.html" class="btn-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M19 12H5M5 12l7-7M5 12l7 7" />
+      </svg>
+      Home
+    </a>
+    <a href="index.html" class="nav-brand">FixMate</a>
+    <div style="width:80px;"></div><!-- spacer -->
+  </nav>
+
+  <!-- ════ STEP BAR ═══════════════════════════════════════════ -->
+  <div class="step-bar">
+    <div class="step-item active" id="step-item-1" onclick="goToStep(1)">
+      <div class="step-circle" id="step-circle-1">1</div>
+      <span class="step-label">Location</span>
+    </div>
+    <div class="step-connector" id="conn-1"></div>
+    <div class="step-item" id="step-item-2" onclick="goToStep(2)">
+      <div class="step-circle" id="step-circle-2">2</div>
+      <span class="step-label">Problem</span>
+    </div>
+    <div class="step-connector" id="conn-2"></div>
+    <div class="step-item" id="step-item-3" onclick="goToStep(3)">
+      <div class="step-circle" id="step-circle-3">3</div>
+      <span class="step-label">Mechanics</span>
+    </div>
+  </div>
+
+  <!-- ════ PAGE BODY ═══════════════════════════════════════════ -->
+  <div class="page-body">
+
+    <!-- ══ STEP 1: LOCATION ══════════════════════════════════ -->
+    <div class="step-panel active" id="step1">
+
+      <!-- Mapbox map fills the space -->
+      <div id="map"></div>
+
+      <!-- Overlay card -->
+      <div class="map-overlay">
+        <h3>Where are you right now?</h3>
+        <p>We'll use your location to find the nearest available mechanics.</p>
+
+        <div class="location-display">
+          <span class="material-symbols-outlined">location_on</span>
+          <span id="location-text">Location not detected yet</span>
+        </div>
+
+        <button class="btn-locate" id="locate-btn" onclick="requestLocation()">
+          <span class="material-symbols-outlined" style="font-size:20px;">my_location</span>
+          Use My Current Location
+        </button>
+
+        <button class="btn-next-loc" id="next-to-step2" onclick="goToStep(2)">
+          Continue to Problem
+          <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ══ STEP 2: PROBLEM ════════════════════════════════════ -->
+    <div class="step-panel" id="step2">
+      <div class="problem-wrap">
+
+        <div class="problem-card">
+
+          <!-- Tabs -->
+          <div class="prob-tabs">
+            <button class="prob-tab active" onclick="switchProbTab('know')" id="tab-know">
+              <span class="material-symbols-outlined">edit_note</span>
+              I Know the Problem
+            </button>
+            <button class="prob-tab" onclick="switchProbTab('quiz')" id="tab-quiz">
+              <span class="material-symbols-outlined">quiz</span>
+              Help Me Diagnose
+            </button>
+            <button class="prob-tab" onclick="switchProbTab('photo')" id="tab-photo">
+              <span class="material-symbols-outlined">photo_camera</span>
+              Upload Photo
+            </button>
+          </div>
+
+          <!-- Tab: Know the problem -->
+          <div class="prob-tab-panel active" id="panel-know">
+            <p class="prob-label">Describe the issue with your vehicle</p>
+            <textarea id="problem-text" class="prob-input" rows="3"
+              placeholder="e.g. Car won't start, flat tyre, engine overheating, battery dead…"></textarea>
+
+            <div class="prob-tags" id="quick-tags">
+              <!-- populated by JS -->
+            </div>
+          </div>
+
+          <!-- Tab: Quiz -->
+          <div class="prob-tab-panel" id="panel-quiz">
+            <div class="quiz-progress">
+              <div class="quiz-bar" id="quiz-bar" style="width:0%"></div>
+            </div>
+            <p class="quiz-q" id="quiz-question">Loading quiz…</p>
+            <div class="quiz-options" id="quiz-options"></div>
+            <div class="quiz-nav">
+              <button class="btn-quiz" id="quiz-back-btn" onclick="quizBack()" style="display:none;">← Back</button>
+              <button class="btn-quiz primary" id="quiz-next-btn" onclick="quizNext()">Next →</button>
+            </div>
+            <div id="quiz-result"></div>
+          </div>
+
+          <!-- Tab: Upload photo -->
+          <div class="prob-tab-panel" id="panel-photo">
+            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+              ondragover="event.preventDefault(); this.classList.add('dragover')"
+              ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
+              <div class="upload-icon">
+                <span class="material-symbols-outlined" style="font-size:2.5rem; color:#4f7cff;">cloud_upload</span>
+              </div>
+              <div class="upload-label">Tap to upload photos of your vehicle</div>
+              <div class="upload-sub">JPG, PNG or HEIC · Up to 5 photos · 10 MB each</div>
+            </div>
+            <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)" />
+            <div class="preview-grid" id="preview-grid"></div>
+          </div>
+
+        </div><!-- /problem-card -->
+
+      </div><!-- /problem-wrap -->
+
+      <!-- Footer -->
+      <div class="prob-footer">
+        <button class="btn-find" onclick="findMechanics()">
+          <span class="material-symbols-outlined" style="font-size:20px;">search</span>
+          Find Nearby Mechanics
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ STEP 3: RESULTS ════════════════════════════════════ -->
+    <div class="step-panel" id="step3">
+      <div class="results-wrap">
+
+        <div class="results-header">
+          <div>
+            <div class="results-title" id="results-title">Finding mechanics…</div>
+            <div class="results-sub" id="results-sub"></div>
+          </div>
+          <select class="sort-select" id="sort-select" onchange="sortMechanics(this.value)">
+            <option value="distance">Nearest first</option>
+            <option value="rating">Top rated</option>
+            <option value="available">Available now</option>
+          </select>
+        </div>
+
+        <div id="mechanics-list">
+          <!-- Loading state -->
+          <div class="loading-card" id="loading-card">
+            <div class="spinner"></div>
+            <p style="color:var(--muted); font-size:0.875rem; margin:0;">Searching for mechanics nearby…</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Spin animation for loading icons
+    if (!document.getElementById("spin-style")) {
+      const s = document.createElement("style");
+      s.id = "spin-style";
+      s.textContent = "@keyframes spin { to { transform: rotate(360deg); } }";
+      document.head.appendChild(s);
+    }
+
+  </script>
+  <script src="./src/js/search-mechanic.js"></script>
+
+</body>
+
+</html>

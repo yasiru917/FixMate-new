@@ -359,7 +359,7 @@
 
                     <p style="text-align:center; font-size:0.8125rem; color:var(--color-on-surface-variant);">
                         Don't have an account?
-                        <a href="signup.html"
+                        <a href="Signup.html"
                             style="font-weight:600; color:var(--color-primary, #003d9b); text-decoration:none;">
                             Create one
                         </a>
@@ -383,7 +383,7 @@
 
             <!-- Desktop: Nav Links -->
             <div class="hidden md:flex items-center gap-1">
-                <a href="#" class="nav-link">Find Mechanic</a>
+                <a href="#" class="nav-link nav-link-active">Find Mechanic</a>
                 <a href="#how-it-works" class="nav-link">How it works</a>
                 <a href="#" class="nav-link">Our Vision</a>
             </div>
@@ -394,12 +394,12 @@
                 <!-- GUEST state -->
                 <div class="nav-guest" id="nav-guest-desktop" style="display:flex; align-items:center; gap:0.5rem;">
                     <button id="login-btn-desktop" class="btn btn-ghost btn-sm">Login</button>
-                    <a href="signup.html" class="btn btn-primary btn-sm">Sign Up</a>
+                    <a href="Signup.html" class="btn btn-primary btn-sm">Sign Up</a>
                 </div>
 
                 <!-- USER state — avatar chip only, no email text, keeps nav width stable -->
                 <div class="nav-user" id="nav-user-desktop"
-                    style="display:none; align-items:center; gap:1rem; flex-shrink:0;">
+                    style="display:none; align-items:center; gap:0.5rem; flex-shrink:0;">
                     <span
                         class="material-symbols-outlined text-outline cursor-pointer hover:text-primary transition-colors select-none"
                         style="font-size:22px;">notifications</span>
@@ -435,7 +435,7 @@
                 border-t border-outline-variant bg-surface-container-lowest">
             <div class="page-container py-4 flex flex-col gap-1">
 
-                <a href="#" class="nav-link py-3 rounded-lg block">Find Mechanic</a>
+                <a href="#" class="nav-link nav-link-active py-3 rounded-lg block">Find Mechanic</a>
                 <a href="#how-it-works" class="nav-link py-3 rounded-lg block">How it works</a>
                 <a href="#about-us" class="nav-link py-3 rounded-lg block">Our Vision</a>
 
@@ -444,7 +444,7 @@
                 <!-- GUEST state -->
                 <div class="nav-guest flex flex-col gap-2 pb-2" id="nav-guest-mobile">
                     <button id="login-btn-mobile" class="btn btn-ghost btn-sm w-full">Login</button>
-                    <a href="signup.html" class="btn btn-primary btn-sm w-full text-center">Sign Up</a>
+                    <a href="Signup.html" class="btn btn-primary btn-sm w-full text-center">Sign Up</a>
                 </div>
 
                 <!-- USER state -->
@@ -498,11 +498,11 @@
                     </p>
 
                     <div class="flex flex-col sm:flex-row gap-sm mt-md w-full sm:w-auto animate-hero-cta">
-                        <button class="btn btn-primary">
+                        <a href="search-for-a-mechanic.html" class="btn btn-primary">
                             <span class="material-symbols-outlined text-body-sm-leading">search</span>
                             Find Mechanic
-                        </button>
-                        <button class="btn btn-outline">Become a Mechanic</button>
+                        </a>
+                        <a href="become-a-mechanic.html" class="btn btn-outline">Become a Mechanic</a>
                     </div>
 
                 </div>
@@ -762,7 +762,7 @@
 
             <div class="flex flex-col sm:flex-row gap-sm justify-center reveal">
                 <button class="btn btn-primary">Get the App</button>
-                <button class="btn btn-outline">Partner with Us</button>
+                <a href="become-a-mechanic.html" class="btn btn-outline">Partner with Us</a>
             </div>
 
         </section>
@@ -781,7 +781,7 @@
             <span class="material-symbols-outlined">home</span>
             <span class="bottom-nav-label">Home</span>
         </button>
-        <button class="bottom-nav-item">
+        <button class="bottom-nav-item" onclick="window.location.href='search-for-a-mechanic.html'">
             <span class="material-symbols-outlined">map</span>
             <span class="bottom-nav-label">Map</span>
         </button>
@@ -809,7 +809,7 @@
             <a href="#" class="footer-link">Privacy Policy</a>
             <a href="#" class="footer-link">Terms of Service</a>
             <a href="#" class="footer-link">Help Center</a>
-            <a href="#" class="footer-link">Partner With Us</a>
+            <a href="become-a-mechanic.html" class="footer-link">Partner With Us</a>
         </nav>
 
         <p class="text-body-sm text-outline">
