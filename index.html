@@ -294,6 +294,29 @@
                     </button>
                 </div>
 
+                <!-- Google -->
+                <button id="modal-google-btn" class="btn-google-modal" type="button">
+                    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                        <g fill="none" fill-rule="evenodd">
+                            <path
+                                d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
+                                fill="#4285F4" />
+                            <path
+                                d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
+                                fill="#34A853" />
+                            <path
+                                d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+                                fill="#FBBC05" />
+                            <path
+                                d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
+                                fill="#EA4335" />
+                        </g>
+                    </svg>
+                    Continue with Google
+                </button>
+
+                <div class="modal-divider">or sign in with email</div>
+
                 <!-- Form -->
                 <form id="modal-login-form" novalidate>
 
@@ -360,7 +383,7 @@
 
             <!-- Desktop: Nav Links -->
             <div class="hidden md:flex items-center gap-1">
-                <a href="search-for-a-mechanic.html" class="nav-link nav-link-active">Find Mechanic</a>
+                <a href="#" class="nav-link nav-link-active">Find Mechanic</a>
                 <a href="#how-it-works" class="nav-link">How it works</a>
                 <a href="#about-us" class="nav-link">About us</a>
             </div>
@@ -377,9 +400,14 @@
                 <!-- USER state — avatar chip only, no email text, keeps nav width stable -->
                 <div class="nav-user" id="nav-user-desktop"
                     style="display:none; align-items:center; gap:0.5rem; flex-shrink:0;">
-                    <span
-                        class="material-symbols-outlined text-outline cursor-pointer hover:text-primary transition-colors select-none"
-                        style="font-size:22px;">notifications</span>
+                    <button id="bell-btn-desktop" aria-label="Alerts" class="badge-wrap"
+                        style="background:none; border:none; cursor:pointer; padding:0.25rem; border-radius:9999px; color:var(--color-outline); transition:color 0.15s;"
+                        onmouseover="this.style.color='var(--color-primary)'"
+                        onmouseout="this.style.color='var(--color-outline)'">
+                        <span class="material-symbols-outlined"
+                            style="font-size:22px; display:block;">notifications</span>
+                        <span class="unread-badge" id="badge-desktop"></span>
+                    </button>
                     <button id="user-chip-desktop" aria-label="My profile" class="user-chip" style="padding:0.2rem;">
                         <div class="user-avatar" id="user-avatar-desktop">?</div>
                     </button>
@@ -412,8 +440,7 @@
                 border-t border-outline-variant bg-surface-container-lowest">
             <div class="page-container py-4 flex flex-col gap-1">
 
-                <a href="search-for-a-mechanic.html" class="nav-link nav-link-active py-3 rounded-lg block">Find
-                    Mechanic</a>
+                <a href="#" class="nav-link nav-link-active py-3 rounded-lg block">Find Mechanic</a>
                 <a href="#how-it-works" class="nav-link py-3 rounded-lg block">How it works</a>
                 <a href="#about-us" class="nav-link py-3 rounded-lg block">About us</a>
 
@@ -679,13 +706,13 @@
             </div>
         </section>
 
-        <!-- Our Vision -->
-        <section id="about-us" class="section-padding px-margin-mobile md:px-margin-desktop
-                    bg-surface-container-low max-w-7xl mx-auto w-full scroll-mt-80
+        <!-- About Us -->
+        <section class="section-padding px-margin-mobile md:px-margin-desktop
+                    bg-surface-container-low max-w-7xl mx-auto w-full
                     rounded-xl mb-xl">
 
             <div class="text-center mb-lg reveal">
-                <h2 class="text-headline-lg text-on-background">About us</h2>
+                <h2 class="text-headline-lg text-on-background">About Us</h2>
                 <p class="text-body-md text-on-surface-variant mt-sm">
                     Building a safer, more connected road for everyone.
                 </p>
@@ -763,9 +790,10 @@
             <span class="material-symbols-outlined">map</span>
             <span class="bottom-nav-label">Map</span>
         </button>
-        <button class="bottom-nav-item">
+        <button class="bottom-nav-item badge-wrap" id="alerts-nav-btn" aria-label="Alerts">
             <span class="material-symbols-outlined">notifications</span>
             <span class="bottom-nav-label">Alerts</span>
+            <span class="unread-badge" id="badge-mobile"></span>
         </button>
         <!-- Profile tab: opens modal if guest, links to profile if logged in -->
         <button class="bottom-nav-item" id="bottom-nav-profile">
@@ -802,8 +830,472 @@
         1. Supabase CDN — exposes window.supabase for main.js auth state
         2. main.js as module — handles all nav, scroll, and auth UI logic
     -->
+    <!-- ── Alerts Drawer Styles ──────────────────────────────── -->
+    <style>
+        /* ── Backdrop ─────────────────────────────────────────── */
+        #alerts-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(3px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        #alerts-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* ── Drawer ───────────────────────────────────────────── */
+        #alerts-drawer {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 301;
+            background: #fff;
+            border-radius: 1.25rem 1.25rem 0 0;
+            box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.18);
+            display: flex;
+            flex-direction: column;
+            max-height: 85dvh;
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+
+        #alerts-drawer.open {
+            transform: translateY(0);
+        }
+
+        /* On desktop — float as a side panel instead */
+        @media (min-width: 768px) {
+            #alerts-drawer {
+                left: auto;
+                right: 1.5rem;
+                bottom: 1.5rem;
+                width: 400px;
+                border-radius: 1.25rem;
+                max-height: 75dvh;
+                transform: translateY(20px) scale(0.97);
+                opacity: 0;
+                pointer-events: none;
+                transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+            }
+
+            #alerts-drawer.open {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+
+        /* ── Drag handle (mobile only) ────────────────────────── */
+        .drawer-handle {
+            width: 36px;
+            height: 4px;
+            border-radius: 9999px;
+            background: rgba(0, 0, 0, 0.12);
+            margin: 0.75rem auto 0;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .drawer-handle {
+                display: none;
+            }
+        }
+
+        /* ── Drawer header ────────────────────────────────────── */
+        .drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem 0.75rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            flex-shrink: 0;
+        }
+
+        .drawer-title {
+            font-family: "Manrope", sans-serif;
+            font-size: 1.0625rem;
+            font-weight: 700;
+            color: #0d1b2a;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .drawer-title .material-symbols-outlined {
+            font-size: 20px;
+            color: #003d9b;
+        }
+
+        .drawer-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-mark-all {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #003d9b;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.3rem 0.625rem;
+            border-radius: 0.375rem;
+            transition: background 0.15s;
+            font-family: "Inter", sans-serif;
+        }
+
+        .btn-mark-all:hover {
+            background: #f0f4ff;
+        }
+
+        .btn-close-drawer {
+            width: 30px;
+            height: 30px;
+            border-radius: 9999px;
+            background: rgba(0, 0, 0, 0.06);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+            flex-shrink: 0;
+            color: #555;
+        }
+
+        .btn-close-drawer:hover {
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-close-drawer .material-symbols-outlined {
+            font-size: 17px;
+        }
+
+        /* ── Drawer body ──────────────────────────────────────── */
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem 0 1rem;
+        }
+
+        /* Section label */
+        .notif-section-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #8a99aa;
+            padding: 0.75rem 1.25rem 0.375rem;
+        }
+
+        /* Notification card */
+        .notif-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.875rem;
+            padding: 0.875rem 1.25rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            position: relative;
+        }
+
+        .notif-card:hover {
+            background: #f8faff;
+        }
+
+        .notif-card.unread {
+            background: #f4f7ff;
+        }
+
+        .notif-card.unread:hover {
+            background: #edf1ff;
+        }
+
+        /* Unread dot */
+        .notif-unread-dot {
+            position: absolute;
+            top: 1.1rem;
+            right: 1.25rem;
+            width: 8px;
+            height: 8px;
+            border-radius: 9999px;
+            background: #003d9b;
+            flex-shrink: 0;
+        }
+
+        /* Icon bubble */
+        .notif-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 9999px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1px;
+        }
+
+        .notif-icon .material-symbols-outlined {
+            font-size: 20px;
+        }
+
+        .ni-green {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .ni-blue {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .ni-red {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .ni-yellow {
+            background: #fffde7;
+            color: #f57f17;
+        }
+
+        .ni-grey {
+            background: #f5f5f5;
+            color: #757575;
+        }
+
+        /* Text */
+        .notif-text {
+            flex: 1;
+            min-width: 0;
+            padding-right: 1rem;
+        }
+
+        .notif-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #0d1b2a;
+            line-height: 1.35;
+            margin-bottom: 0.2rem;
+        }
+
+        .notif-body {
+            font-size: 0.8rem;
+            color: #5a6a7a;
+            line-height: 1.45;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .notif-time {
+            font-size: 0.72rem;
+            color: #aab4be;
+            margin-top: 0.3rem;
+        }
+
+        /* Divider between cards */
+        .notif-card+.notif-card {
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .notif-section-label+.notif-card {
+            border-top: none;
+        }
+
+        /* Empty state */
+        .notif-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3.5rem 1.5rem;
+            text-align: center;
+        }
+
+        .notif-empty .material-symbols-outlined {
+            font-size: 3.5rem;
+            color: #dde3ea;
+            margin-bottom: 0.875rem;
+        }
+
+        .notif-empty-title {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: #5a6a7a;
+            margin-bottom: 0.25rem;
+        }
+
+        .notif-empty-sub {
+            font-size: 0.8125rem;
+            color: #aab4be;
+        }
+
+        /* Guest state */
+        .notif-guest {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .notif-guest .material-symbols-outlined {
+            font-size: 3rem;
+            color: #dde3ea;
+        }
+
+        .notif-guest p {
+            font-size: 0.875rem;
+            color: #5a6a7a;
+            margin: 0;
+        }
+
+        /* Skeleton loader */
+        .notif-skeleton {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.875rem;
+            padding: 0.875rem 1.25rem;
+        }
+
+        .sk {
+            background: linear-gradient(90deg, #eef0f5 25%, #f7f8fb 50%, #eef0f5 75%);
+            background-size: 200% 100%;
+            animation: sk 1.3s infinite;
+            border-radius: 0.375rem;
+        }
+
+        @keyframes sk {
+            from {
+                background-position: 200% 0
+            }
+
+            to {
+                background-position: -200% 0
+            }
+        }
+
+        .sk-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 9999px;
+            flex-shrink: 0;
+        }
+
+        .sk-lines {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding-top: 0.25rem;
+        }
+
+        /* ── Unread badge (bell + bottom nav) ─────────────────── */
+        .badge-wrap {
+            position: relative;
+            display: inline-flex;
+        }
+
+        .unread-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9999px;
+            background: #e53935;
+            color: #fff;
+            font-size: 0.625rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            border: 2px solid #fff;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.2s, transform 0.2s;
+            pointer-events: none;
+            line-height: 1;
+        }
+
+        .unread-badge.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+    </style>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="./src/js/main.js"></script>
+
+    <!-- ── Alerts Backdrop ──────────────────────────────────────── -->
+    <div id="alerts-backdrop" onclick="closeAlertsDrawer()"></div>
+
+    <!-- ── Alerts Drawer ────────────────────────────────────────── -->
+    <div id="alerts-drawer" role="dialog" aria-modal="true" aria-label="Alerts">
+
+        <!-- Drag handle (mobile) -->
+        <div class="drawer-handle"></div>
+
+        <!-- Header -->
+        <div class="drawer-header">
+            <div class="drawer-title">
+                <span class="material-symbols-outlined">notifications</span>
+                Alerts
+            </div>
+            <div class="drawer-actions">
+                <button class="btn-mark-all" id="mark-all-btn" onclick="markAllRead()">
+                    Mark all as read
+                </button>
+                <button class="btn-close-drawer" onclick="closeAlertsDrawer()" aria-label="Close alerts">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Body — JS renders content here -->
+        <div class="drawer-body" id="alerts-body">
+            <!-- Skeleton shown until data loads -->
+            <div id="alerts-skeleton">
+                <div class="notif-skeleton">
+                    <div class="sk sk-circle"></div>
+                    <div class="sk-lines">
+                        <div class="sk" style="height:0.875rem; width:60%;"></div>
+                        <div class="sk" style="height:0.75rem; width:90%;"></div>
+                        <div class="sk" style="height:0.75rem; width:75%;"></div>
+                    </div>
+                </div>
+                <div class="notif-skeleton">
+                    <div class="sk sk-circle"></div>
+                    <div class="sk-lines">
+                        <div class="sk" style="height:0.875rem; width:50%;"></div>
+                        <div class="sk" style="height:0.75rem; width:85%;"></div>
+                    </div>
+                </div>
+                <div class="notif-skeleton">
+                    <div class="sk sk-circle"></div>
+                    <div class="sk-lines">
+                        <div class="sk" style="height:0.875rem; width:65%;"></div>
+                        <div class="sk" style="height:0.75rem; width:80%;"></div>
+                        <div class="sk" style="height:0.75rem; width:55%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
 
 </body>
 
