@@ -66,6 +66,20 @@ document.getElementById("bottom-nav-profile").addEventListener("click", () => {
   });
 });
 
+document.getElementById("map-nav-btn").addEventListener("click", () => {
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) window.location.href = "search-for-a-mechanic.html";
+    else openAuthModal();
+  });
+});
+
+document.getElementById("find-mechanic-btn").addEventListener("click", () => {
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) window.location.href = "search-for-a-mechanic.html";
+    else openAuthModal();
+  });
+});
+
 document.getElementById("close-auth").addEventListener("click", closeAuthModal);
 authModal.addEventListener("click", (e) => {
   if (e.target === authModal) closeAuthModal();
@@ -134,15 +148,6 @@ document
     if (error) showModalError("modal-email-err", error.message);
     else
       showModalError("modal-email-err", "Reset email sent! Check your inbox.");
-  });
-
-document
-  .getElementById("modal-google-btn")
-  .addEventListener("click", async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin + "/index.html" },
-    });
   });
 
 async function handleLogout() {

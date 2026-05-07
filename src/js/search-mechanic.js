@@ -7,21 +7,36 @@
 const { createClient } = supabase;
 const supabaseClient = createClient(
   "https://vgjltmohtjvtwxnrsxkv.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnamx0bW9odGp2dHd4bnJzeGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3MjAzNzcsImV4cCI6MjA5MzI5NjM3N30.4mxPQMezSRjPkltSYZad00eqb-wqkXPoCUDLQNBQJ7I"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnamx0bW9odGp2dHd4bnJzeGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3MjAzNzcsImV4cCI6MjA5MzI5NjM3N30.4mxPQMezSRjPkltSYZad00eqb-wqkXPoCUDLQNBQJ7I",
 );
+
+/* ── Authentication Check ─────────────────────────────── */
+supabaseClient.auth.getSession().then(({ data }) => {
+  if (!data.session) {
+    // Redirect to login if not authenticated
+    window.location.href = "login.html";
+  }
+});
+
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  if (!session) {
+    // Redirect to login if session is lost
+    window.location.href = "login.html";
+  }
+});
 
 /* ══════════════════════════════════════════════════════════
    STATE
 ══════════════════════════════════════════════════════════ */
-let userCoords  = null;   // { lat, lng }
-let userMarker  = null;
-let map         = null;
+let userCoords = null; // { lat, lng }
+let userMarker = null;
+let map = null;
 let currentStep = 1;
 let problemDesc = "";
-let quizIndex   = 0;
+let quizIndex = 0;
 let quizAnswers = [];
-let mechanics   = [];
-let mechMarkers = [];     // Leaflet markers for mechanics
+let mechanics = [];
+let mechMarkers = []; // Leaflet markers for mechanics
 
 /* ══════════════════════════════════════════════════════════
    TOAST
@@ -37,21 +52,37 @@ function toast(msg, type = "info", duration = 3500) {
    STEP NAVIGATION
 ══════════════════════════════════════════════════════════ */
 function goToStep(n) {
-  if (n === 2 && !userCoords) { toast("Please share your location first.", "error"); return; }
-  if (n === 3 && currentStep < 2) { toast("Please describe the problem first.", "error"); return; }
+  if (n === 2 && !userCoords) {
+    toast("Please share your location first.", "error");
+    return;
+  }
+  if (n === 3 && currentStep < 2) {
+    toast("Please describe the problem first.", "error");
+    return;
+  }
 
   // Hide all panels
-  document.querySelectorAll(".step-panel").forEach(p => p.classList.remove("active"));
+  document
+    .querySelectorAll(".step-panel")
+    .forEach((p) => p.classList.remove("active"));
   document.getElementById(`step${n}`).classList.add("active");
 
   // Update step bar
   for (let i = 1; i <= 3; i++) {
-    const item   = document.getElementById(`step-item-${i}`);
+    const item = document.getElementById(`step-item-${i}`);
     const circle = document.getElementById(`step-circle-${i}`);
     item.classList.remove("active", "done");
-    if (i < n)  { item.classList.add("done");   circle.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px;">check</span>`; }
-    if (i === n){ item.classList.add("active");  circle.textContent = i; }
-    if (i > n)  {                                circle.textContent = i; }
+    if (i < n) {
+      item.classList.add("done");
+      circle.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px;">check</span>`;
+    }
+    if (i === n) {
+      item.classList.add("active");
+      circle.textContent = i;
+    }
+    if (i > n) {
+      circle.textContent = i;
+    }
   }
   for (let i = 1; i <= 2; i++) {
     document.getElementById(`conn-${i}`).classList.toggle("done", i < n);
@@ -70,7 +101,8 @@ function initMap(lat = 6.9271, lng = 79.8612) {
   map = L.map("map", { zoomControl: false }).setView([lat, lng], 13);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 19,
   }).addTo(map);
 
@@ -93,11 +125,12 @@ function placeUserMarker(lat, lng) {
 }
 
 function requestLocation() {
-  const btn  = document.getElementById("locate-btn");
+  const btn = document.getElementById("locate-btn");
   const text = document.getElementById("location-text");
 
   if (!navigator.geolocation) {
-    toast("Geolocation is not supported by your browser.", "error"); return;
+    toast("Geolocation is not supported by your browser.", "error");
+    return;
   }
 
   btn.disabled = true;
@@ -116,10 +149,12 @@ function requestLocation() {
       try {
         const res = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${userCoords.lat}&lon=${userCoords.lng}&zoom=16&addressdetails=1`,
-          { headers: { "Accept-Language": "en" } }
+          { headers: { "Accept-Language": "en" } },
         );
         const data = await res.json();
-        const place = data.display_name ?? `${userCoords.lat.toFixed(4)}, ${userCoords.lng.toFixed(4)}`;
+        const place =
+          data.display_name ??
+          `${userCoords.lat.toFixed(4)}, ${userCoords.lng.toFixed(4)}`;
         text.textContent = place;
       } catch {
         text.textContent = `${userCoords.lat.toFixed(4)}° N, ${userCoords.lng.toFixed(4)}° E`;
@@ -136,12 +171,13 @@ function requestLocation() {
       btn.disabled = false;
       btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:20px;">my_location</span> Use My Current Location`;
       text.textContent = "Location not detected yet";
-      const msg = err.code === 1
-        ? "Location permission denied. Please allow access in your browser settings."
-        : "Unable to detect location. Please try again.";
+      const msg =
+        err.code === 1
+          ? "Location permission denied. Please allow access in your browser settings."
+          : "Unable to detect location. Please try again.";
       toast(msg, "error", 5000);
     },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
   );
 }
 
@@ -154,7 +190,7 @@ window.addEventListener("load", () => {
    STEP 2 — PROBLEM TABS
 ══════════════════════════════════════════════════════════ */
 function switchProbTab(tab) {
-  ["know", "quiz", "photo"].forEach(t => {
+  ["know", "quiz", "photo"].forEach((t) => {
     document.getElementById(`tab-${t}`).classList.toggle("active", t === tab);
     document.getElementById(`panel-${t}`).classList.toggle("active", t === tab);
   });
@@ -162,13 +198,20 @@ function switchProbTab(tab) {
 
 // Quick-tag chips for "know" tab
 const QUICK_TAGS = [
-  "Engine won't start", "Flat tyre", "Battery dead",
-  "Overheating", "Brake issue", "Fuel empty",
-  "Warning light", "Transmission", "AC not working", "Accident damage"
+  "Engine won't start",
+  "Flat tyre",
+  "Battery dead",
+  "Overheating",
+  "Brake issue",
+  "Fuel empty",
+  "Warning light",
+  "Transmission",
+  "AC not working",
+  "Accident damage",
 ];
 (function renderTags() {
   const wrap = document.getElementById("quick-tags");
-  QUICK_TAGS.forEach(tag => {
+  QUICK_TAGS.forEach((tag) => {
     const btn = document.createElement("button");
     btn.className = "prob-tag";
     btn.textContent = tag;
@@ -181,11 +224,15 @@ const QUICK_TAGS = [
 })();
 
 function updateProblemDesc() {
-  const typed  = document.getElementById("problem-text").value.trim();
-  const tagged = [...document.querySelectorAll(".prob-tag.selected")].map(b => b.textContent);
-  problemDesc  = [typed, ...tagged].filter(Boolean).join(", ");
+  const typed = document.getElementById("problem-text").value.trim();
+  const tagged = [...document.querySelectorAll(".prob-tag.selected")].map(
+    (b) => b.textContent,
+  );
+  problemDesc = [typed, ...tagged].filter(Boolean).join(", ");
 }
-document.getElementById("problem-text")?.addEventListener("input", updateProblemDesc);
+document
+  .getElementById("problem-text")
+  ?.addEventListener("input", updateProblemDesc);
 
 /* ── QUIZ ────────────────────────────────────────────────── */
 const QUIZ = [
@@ -195,7 +242,7 @@ const QUIZ = [
       { icon: "✅", label: "Yes, it won't move at all" },
       { icon: "⚠️", label: "It moves but feels wrong" },
       { icon: "🔈", label: "It moves but makes noise" },
-    ]
+    ],
   },
   {
     q: "What happens when you try to start the engine?",
@@ -204,7 +251,7 @@ const QUIZ = [
       { icon: "🔄", label: "It cranks but won't fire" },
       { icon: "💡", label: "Dashboard lights come on but no start" },
       { icon: "✅", label: "Engine starts fine" },
-    ]
+    ],
   },
   {
     q: "Have you noticed any warning lights on the dashboard?",
@@ -213,7 +260,7 @@ const QUIZ = [
       { icon: "🟡", label: "Yellow / orange warning light(s)" },
       { icon: "🚗", label: "Check engine light" },
       { icon: "❌", label: "No warning lights" },
-    ]
+    ],
   },
   {
     q: "Any unusual sounds or smells?",
@@ -222,45 +269,54 @@ const QUIZ = [
       { icon: "🔩", label: "Grinding or clicking noise" },
       { icon: "💧", label: "Hissing or liquid dripping" },
       { icon: "🚫", label: "No unusual sounds or smells" },
-    ]
+    ],
   },
   {
     q: "Are any tyres visibly flat or damaged?",
     opts: [
       { icon: "✅", label: "Yes, one or more flat tyres" },
       { icon: "❌", label: "No, tyres look fine" },
-    ]
+    ],
   },
 ];
 
 const DIAGNOSES = {
-  "0:0,1:0": "Likely a complete electrical failure or seized engine. A mechanic will need to assess on-site.",
-  "0:0,1:1": "Possible fuel issue or spark plug failure. Mechanic can diagnose quickly.",
-  "0:0,1:2": "Likely a dead battery. A jump-start or battery replacement may be needed.",
-  "0:1":     "Possible transmission or drive-shaft issue. Avoid driving further.",
-  "0:2":     "Possible wheel bearing, CV joint, or brake issue. Safe to have a mechanic check.",
-  "4:0":     "Flat tyre confirmed. A tyre change or inflation service is needed.",
-  default:   "Based on your answers, there may be a mechanical or electrical issue. A mechanic will be able to diagnose it quickly on-site.",
+  "0:0,1:0":
+    "Likely a complete electrical failure or seized engine. A mechanic will need to assess on-site.",
+  "0:0,1:1":
+    "Possible fuel issue or spark plug failure. Mechanic can diagnose quickly.",
+  "0:0,1:2":
+    "Likely a dead battery. A jump-start or battery replacement may be needed.",
+  "0:1": "Possible transmission or drive-shaft issue. Avoid driving further.",
+  "0:2":
+    "Possible wheel bearing, CV joint, or brake issue. Safe to have a mechanic check.",
+  "4:0": "Flat tyre confirmed. A tyre change or inflation service is needed.",
+  default:
+    "Based on your answers, there may be a mechanical or electrical issue. A mechanic will be able to diagnose it quickly on-site.",
 };
 
 let quizAnswersMap = {};
 
 function renderQuiz() {
-  const q   = QUIZ[quizIndex];
+  const q = QUIZ[quizIndex];
   const pct = Math.round((quizIndex / QUIZ.length) * 100);
 
   document.getElementById("quiz-bar").style.width = pct + "%";
-  document.getElementById("quiz-question").textContent = `Q${quizIndex + 1} of ${QUIZ.length}: ${q.q}`;
+  document.getElementById("quiz-question").textContent =
+    `Q${quizIndex + 1} of ${QUIZ.length}: ${q.q}`;
   document.getElementById("quiz-result").style.display = "none";
 
   const opts = document.getElementById("quiz-options");
   opts.innerHTML = "";
   q.opts.forEach((opt, i) => {
     const btn = document.createElement("button");
-    btn.className = "quiz-opt" + (quizAnswersMap[quizIndex] === i ? " chosen" : "");
+    btn.className =
+      "quiz-opt" + (quizAnswersMap[quizIndex] === i ? " chosen" : "");
     btn.innerHTML = `<span class="opt-icon">${opt.icon}</span>${opt.label}`;
-    btn.onclick   = () => {
-      document.querySelectorAll(".quiz-opt").forEach(b => b.classList.remove("chosen"));
+    btn.onclick = () => {
+      document
+        .querySelectorAll(".quiz-opt")
+        .forEach((b) => b.classList.remove("chosen"));
       btn.classList.add("chosen");
       quizAnswersMap[quizIndex] = i;
     };
@@ -268,15 +324,18 @@ function renderQuiz() {
   });
 
   // Show/hide nav buttons properly
-  document.getElementById("quiz-back-btn").style.display = quizIndex > 0 ? "" : "none";
+  document.getElementById("quiz-back-btn").style.display =
+    quizIndex > 0 ? "" : "none";
   const nextBtn = document.getElementById("quiz-next-btn");
-  nextBtn.style.display = "";  // FIX: always show next/diagnose button
-  nextBtn.textContent = quizIndex === QUIZ.length - 1 ? "See Diagnosis →" : "Next →";
+  nextBtn.style.display = ""; // FIX: always show next/diagnose button
+  nextBtn.textContent =
+    quizIndex === QUIZ.length - 1 ? "See Diagnosis →" : "Next →";
 }
 
 function quizNext() {
   if (quizAnswersMap[quizIndex] === undefined) {
-    toast("Please pick an answer to continue.", "error"); return;
+    toast("Please pick an answer to continue.", "error");
+    return;
   }
   if (quizIndex < QUIZ.length - 1) {
     quizIndex++;
@@ -286,7 +345,10 @@ function quizNext() {
     const key1 = `${0}:${quizAnswersMap[0]},${1}:${quizAnswersMap[1]}`;
     const key2 = `${0}:${quizAnswersMap[0]}`;
     const key3 = `4:${quizAnswersMap[4]}`;
-    const diagnosis = DIAGNOSES[key1] || DIAGNOSES[key2] || (quizAnswersMap[4] === 0 ? DIAGNOSES["4:0"] : DIAGNOSES.default);
+    const diagnosis =
+      DIAGNOSES[key1] ||
+      DIAGNOSES[key2] ||
+      (quizAnswersMap[4] === 0 ? DIAGNOSES["4:0"] : DIAGNOSES.default);
 
     document.getElementById("quiz-bar").style.width = "100%";
     document.getElementById("quiz-options").innerHTML = "";
@@ -294,7 +356,8 @@ function quizNext() {
     document.getElementById("quiz-next-btn").textContent = "↻ Restart Quiz";
     // FIX: keep next button visible, repurpose as restart
     document.getElementById("quiz-next-btn").onclick = restartQuiz;
-    document.getElementById("quiz-question").textContent = "🔍 Diagnosis complete";
+    document.getElementById("quiz-question").textContent =
+      "🔍 Diagnosis complete";
 
     const result = document.getElementById("quiz-result");
     result.style.display = "block";
@@ -313,7 +376,10 @@ function restartQuiz() {
 }
 
 function quizBack() {
-  if (quizIndex > 0) { quizIndex--; renderQuiz(); }
+  if (quizIndex > 0) {
+    quizIndex--;
+    renderQuiz();
+  }
 }
 
 // Init quiz on load
@@ -322,9 +388,9 @@ renderQuiz();
 /* ── PHOTO UPLOAD ─────────────────────────────────────────── */
 function handleFiles(files) {
   const grid = document.getElementById("preview-grid");
-  [...files].slice(0, 5).forEach(file => {
+  [...files].slice(0, 5).forEach((file) => {
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = (e) => {
       const img = document.createElement("img");
       img.src = e.target.result;
       img.className = "preview-img";
@@ -332,7 +398,8 @@ function handleFiles(files) {
     };
     reader.readAsDataURL(file);
   });
-  if (files.length > 0) problemDesc = problemDesc || "Vehicle images uploaded for inspection";
+  if (files.length > 0)
+    problemDesc = problemDesc || "Vehicle images uploaded for inspection";
 }
 
 function handleDrop(e) {
@@ -350,11 +417,13 @@ function handleDrop(e) {
  */
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon / 2) ** 2;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
@@ -362,14 +431,28 @@ function haversine(lat1, lon1, lat2, lon2) {
  * Generate avatar color from name string
  */
 function nameColor(name) {
-  const colors = ["#003d9b","#1b5e20","#b71c1c","#4a148c","#e65100","#00695c","#1565c0","#6a1b9a"];
+  const colors = [
+    "#003d9b",
+    "#1b5e20",
+    "#b71c1c",
+    "#4a148c",
+    "#e65100",
+    "#00695c",
+    "#1565c0",
+    "#6a1b9a",
+  ];
   let hash = 0;
   for (const c of name) hash = c.charCodeAt(0) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
 }
 
 function getInitials(name) {
-  return name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 async function loadMechanics() {
@@ -397,33 +480,42 @@ async function loadMechanics() {
     }
 
     // Map Supabase rows to display format
-    mechanics = data.map(row => {
+    mechanics = data.map((row) => {
       // If mechanic has lat/lng stored, use it; otherwise assign random offset for demo
-      const mLat = row.latitude ?? (userCoords ? userCoords.lat + (Math.random() - 0.5) * 0.04 : 6.927 + (Math.random() - 0.5) * 0.04);
-      const mLng = row.longitude ?? (userCoords ? userCoords.lng + (Math.random() - 0.5) * 0.04 : 79.861 + (Math.random() - 0.5) * 0.04);
-      const dist = userCoords ? haversine(userCoords.lat, userCoords.lng, mLat, mLng) : 0;
+      const mLat =
+        row.latitude ??
+        (userCoords
+          ? userCoords.lat + (Math.random() - 0.5) * 0.04
+          : 6.927 + (Math.random() - 0.5) * 0.04);
+      const mLng =
+        row.longitude ??
+        (userCoords
+          ? userCoords.lng + (Math.random() - 0.5) * 0.04
+          : 79.861 + (Math.random() - 0.5) * 0.04);
+      const dist = userCoords
+        ? haversine(userCoords.lat, userCoords.lng, mLat, mLng)
+        : 0;
 
       return {
-        id:        row.id,
-        name:      row.full_name,
+        id: row.id,
+        name: row.full_name,
         specialty: row.vehicle_types ?? "All Vehicle Types",
-        dist:      Math.round(dist * 10) / 10,
-        rating:    row.rating ?? 4.5,
-        reviews:   row.review_count ?? 0,
+        dist: Math.round(dist * 10) / 10,
+        rating: row.rating ?? 4.5,
+        reviews: row.review_count ?? 0,
         available: row.available !== false,
-        phone:     row.phone ?? "",
-        wa:        row.phone ?? "",
-        color:     nameColor(row.full_name),
-        initials:  getInitials(row.full_name),
-        lat:       mLat,
-        lng:       mLng,
+        phone: row.phone ?? "",
+        wa: row.phone ?? "",
+        color: nameColor(row.full_name),
+        initials: getInitials(row.full_name),
+        lat: mLat,
+        lng: mLng,
       };
     });
 
     // Sort by distance
     mechanics.sort((a, b) => a.dist - b.dist);
     renderMechanics(mechanics);
-
   } catch (err) {
     console.error("Supabase error:", err);
     document.getElementById("mechanics-list").innerHTML = `
@@ -443,16 +535,20 @@ function buildWhatsAppUrl(phone) {
   // Always read current problemDesc at click time
   updateProblemDesc();
   const desc = problemDesc || "vehicle issue";
-  const locStr = userCoords ? `https://maps.google.com/?q=${userCoords.lat},${userCoords.lng}` : "";
+  const locStr = userCoords
+    ? `https://maps.google.com/?q=${userCoords.lat},${userCoords.lng}`
+    : "";
   const msg = `Hi, I found you on FixMate. I need help with: ${desc}.${locStr ? " My location: " + locStr : ""}`;
   const cleanPhone = phone.replace(/[^0-9]/g, "");
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
 }
 
 function renderMechanics(list) {
-  const available = list.filter(m => m.available).length;
-  document.getElementById("results-title").textContent = `${list.length} mechanic${list.length !== 1 ? "s" : ""} found`;
-  document.getElementById("results-sub").textContent   = `${available} available now · ${userCoords ? "Near your location" : ""}`;
+  const available = list.filter((m) => m.available).length;
+  document.getElementById("results-title").textContent =
+    `${list.length} mechanic${list.length !== 1 ? "s" : ""} found`;
+  document.getElementById("results-sub").textContent =
+    `${available} available now · ${userCoords ? "Near your location" : ""}`;
 
   const container = document.getElementById("mechanics-list");
 
@@ -466,7 +562,9 @@ function renderMechanics(list) {
     return;
   }
 
-  container.innerHTML = list.map(m => `
+  container.innerHTML = list
+    .map(
+      (m) => `
     <div class="mech-card">
       <div class="mech-top">
         <div class="mech-avatar" style="background:${m.color};">${m.initials}</div>
@@ -502,7 +600,9 @@ function renderMechanics(list) {
         </a>
       </div>
     </div>
-  `).join("");
+  `,
+    )
+    .join("");
 
   // Add mechanic pins on the map
   addMechanicPins(list);
@@ -513,12 +613,12 @@ function renderMechanics(list) {
  */
 function addMechanicPins(list) {
   // Remove old mechanic markers
-  mechMarkers.forEach(m => map.removeLayer(m));
+  mechMarkers.forEach((m) => map.removeLayer(m));
   mechMarkers = [];
 
   if (!map) return;
 
-  list.forEach(m => {
+  list.forEach((m) => {
     const mechIcon = L.divIcon({
       className: "mech-map-pin",
       html: `<div class="mech-pin" style="background:${m.color};">${m.initials}</div>`,
@@ -526,8 +626,7 @@ function addMechanicPins(list) {
       iconAnchor: [18, 18],
     });
 
-    const marker = L.marker([m.lat, m.lng], { icon: mechIcon })
-      .addTo(map)
+    const marker = L.marker([m.lat, m.lng], { icon: mechIcon }).addTo(map)
       .bindPopup(`
         <strong>${m.name}</strong><br>
         ${m.specialty}<br>
@@ -539,16 +638,20 @@ function addMechanicPins(list) {
 
   // Fit map to show user + all mechanic markers
   if (userCoords && list.length > 0) {
-    const allPoints = [[userCoords.lat, userCoords.lng], ...list.map(m => [m.lat, m.lng])];
+    const allPoints = [
+      [userCoords.lat, userCoords.lng],
+      ...list.map((m) => [m.lat, m.lng]),
+    ];
     map.fitBounds(allPoints, { padding: [40, 40], maxZoom: 14 });
   }
 }
 
 function sortMechanics(by) {
   const sorted = [...mechanics].sort((a, b) => {
-    if (by === "distance")  return a.dist - b.dist;
-    if (by === "rating")    return b.rating - a.rating;
-    if (by === "available") return (b.available ? 1 : 0) - (a.available ? 1 : 0);
+    if (by === "distance") return a.dist - b.dist;
+    if (by === "rating") return b.rating - a.rating;
+    if (by === "available")
+      return (b.available ? 1 : 0) - (a.available ? 1 : 0);
     return 0;
   });
   renderMechanics(sorted);
