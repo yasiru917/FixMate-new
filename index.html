@@ -338,6 +338,190 @@
         #app-modal-btn:active {
             background: #001d50;
         }
+
+        /* ── SOS Button ──────────────────────────────────────── */
+        .sos-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.4rem 1.25rem;
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: #fff;
+            border: none;
+            border-radius: 0.375rem;
+            font-family: 'Manrope', sans-serif;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.45);
+            animation: sos-pulse 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        .sos-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4);
+        }
+
+        .sos-btn:active {
+            transform: scale(0.97);
+        }
+
+        .sos-btn .material-symbols-outlined {
+            font-size: 18px;
+        }
+
+        @keyframes sos-pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.45);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+            }
+        }
+
+        /* ── SOS Modal ───────────────────────────────────────── */
+        #sos-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 1;
+            transition: opacity 0.2s ease;
+        }
+
+        #sos-modal.hidden {
+            display: none;
+        }
+
+        #sos-modal-card {
+            background: var(--color-surface-container-lowest, #fff);
+            border-radius: 1.25rem;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+            overflow: hidden;
+            animation: modal-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        #sos-modal-card .sos-accent-bar {
+            height: 4px;
+            background: linear-gradient(90deg, #dc2626, #f87171);
+        }
+
+        .sos-icon-bubble {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #dc2626, #f87171);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+            flex-shrink: 0;
+            animation: sos-icon-pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes sos-icon-pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 0 14px rgba(220, 38, 38, 0);
+            }
+        }
+
+        .sos-icon-bubble span {
+            color: #fff;
+            font-size: 40px;
+        }
+
+        #sos-modal-card h2 {
+            font-family: 'Manrope', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-on-surface);
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .sos-modal-body {
+            font-size: 0.9375rem;
+            color: var(--color-on-surface-variant);
+            text-align: left;
+            line-height: 1.7;
+            margin-bottom: 1.25rem;
+        }
+
+        .sos-modal-body p {
+            margin-bottom: 0.75rem;
+        }
+
+        .sos-modal-body p:last-child {
+            margin-bottom: 0;
+        }
+
+        #sos-modal-close-btn {
+            width: 100%;
+            padding: 0.625rem 1rem;
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: #fff;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+        #sos-modal-close-btn:hover {
+            background: linear-gradient(135deg, #b91c1c, #991b1b);
+        }
+
+        #sos-modal-close-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* ── SOS Mobile full-width button ────────────────────── */
+        .sos-btn-mobile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.625rem 1rem;
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: #fff;
+            border: none;
+            border-radius: 0.5rem;
+            font-family: 'Manrope', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .sos-btn-mobile:hover {
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35);
+        }
+
+        .sos-btn-mobile .material-symbols-outlined {
+            font-size: 18px;
+        }
     </style>
 </head>
 
@@ -466,6 +650,39 @@
     </div>
 
 
+    <!-- ── SOS Modal ──────────────────────────────────────────── -->
+    <div id="sos-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="sos-modal-title">
+        <div id="sos-modal-card">
+
+            <div class="sos-accent-bar"></div>
+
+            <div style="padding: 2rem 2rem 1.75rem; display: flex; flex-direction: column; align-items: center;">
+
+                <!-- SOS Icon -->
+                <div class="sos-icon-bubble">
+                    <span class="material-symbols-outlined">emergency</span>
+                </div>
+
+                <!-- Heading -->
+                <h2 id="sos-modal-title">🚨 SOS Emergency Assistance</h2>
+
+                <!-- Body -->
+                <div class="sos-modal-body">
+                    <p>This feature is currently under development and will be available soon in FixMate.</p>
+                    <p>In the future, the SOS system will help users quickly contact emergency roadside assistance
+                        during critical situations such as accidents, vehicle breakdowns, or unsafe conditions.</p>
+                    <p>We're working to make this feature fast, reliable, and available across Sri Lanka.</p>
+                    <p>Thank you for your patience while we build it. Stay tuned for future updates.</p>
+                </div>
+
+                <!-- Close Button -->
+                <button id="sos-modal-close-btn">Close</button>
+
+            </div>
+        </div>
+    </div>
+
+
     <!-- ── Top Nav ──────────────────────────────────────────────── -->
     <nav id="top-nav" class="sticky top-0 z-50 w-full
               bg-surface-container-lowest border-b border-outline-variant
@@ -486,6 +703,11 @@
 
             <!-- Desktop: Actions -->
             <div class="hidden md:flex items-center gap-3">
+
+                <!-- SOS Button -->
+                <button id="sos-btn-desktop" class="sos-btn" aria-label="SOS Emergency">
+                    SOS
+                </button>
 
                 <!-- GUEST state -->
                 <div class="nav-guest" id="nav-guest-desktop" style="display:flex; align-items:center; gap:0.5rem;">
@@ -541,6 +763,11 @@
                 <a href="#about-us" class="nav-link py-3 rounded-lg block">About us</a>
                 <a href="#contact-us" class="nav-link py-3 rounded-lg block">Contact Us</a>
 
+                <!-- SOS Button (mobile) -->
+                <button id="sos-btn-mobile" class="sos-btn-mobile" aria-label="SOS Emergency">
+                    SOS Emergency
+                </button>
+
                 <div class="h-px bg-outline-variant my-2"></div>
 
                 <!-- GUEST state -->
@@ -569,7 +796,6 @@
         </div>
 
     </nav>
-
 
     <!-- ── Main Content ──────────────────────────────────────────── -->
     <main class="grow pb-18 md:pb-0">
@@ -1508,6 +1734,38 @@
                 this.reset();
             }
         });
+
+        /* ── SOS Modal Logic ──────────────────────────────── */
+        (function () {
+            const sosModal = document.getElementById('sos-modal');
+            const closeBtn = document.getElementById('sos-modal-close-btn');
+            const desktopBtn = document.getElementById('sos-btn-desktop');
+            const mobileBtn = document.getElementById('sos-btn-mobile');
+
+            function openSOS() {
+                sosModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSOS() {
+                sosModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            desktopBtn.addEventListener('click', openSOS);
+            mobileBtn.addEventListener('click', openSOS);
+            closeBtn.addEventListener('click', closeSOS);
+
+            // close on backdrop click
+            sosModal.addEventListener('click', function (e) {
+                if (e.target === sosModal) closeSOS();
+            });
+
+            // close on Escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && !sosModal.classList.contains('hidden')) closeSOS();
+            });
+        })();
     </script>
 
 </body>
