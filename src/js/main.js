@@ -80,6 +80,10 @@ document.getElementById("find-mechanic-btn").addEventListener("click", () => {
   });
 });
 
+document.getElementById("get-app-btn").addEventListener("click", () => {
+  alert("FixMate app is in development.");
+});
+
 document.getElementById("close-auth").addEventListener("click", closeAuthModal);
 authModal.addEventListener("click", (e) => {
   if (e.target === authModal) closeAuthModal();
