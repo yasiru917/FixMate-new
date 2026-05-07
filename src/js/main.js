@@ -81,7 +81,31 @@ document.getElementById("find-mechanic-btn").addEventListener("click", () => {
 });
 
 document.getElementById("get-app-btn").addEventListener("click", () => {
-  alert("FixMate app is in development.");
+  openAppModal();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   APP MODAL
+══════════════════════════════════════════════════════════════ */
+const appModal = document.getElementById("app-modal");
+
+function openAppModal() {
+  appModal.classList.remove("hidden");
+}
+
+function closeAppModal() {
+  appModal.classList.add("hidden");
+}
+
+document
+  .getElementById("app-modal-btn")
+  .addEventListener("click", closeAppModal);
+appModal.addEventListener("click", (e) => {
+  if (e.target === appModal) closeAppModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !appModal.classList.contains("hidden"))
+    closeAppModal();
 });
 
 document.getElementById("close-auth").addEventListener("click", closeAuthModal);
