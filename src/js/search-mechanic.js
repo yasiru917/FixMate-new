@@ -455,6 +455,41 @@ function getInitials(name) {
     .slice(0, 2);
 }
 
+/**
+ * Geocode a city/area name to lat/lng using Nominatim.
+ * Returns { lat, lng } or null if geocoding fails.
+ * Results are cached per session to avoid repeated API calls.
+ */
+const _geocodeCache = {};
+async function geocodeCity(cityName) {
+  if (!cityName) return null;
+  const key = cityName.trim().toLowerCase();
+  if (_geocodeCache[key] !== undefined) return _geocodeCache[key];
+
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName)}&limit=1&countrycodes=lk`,
+      { headers: { "Accept-Language": "en" } },
+    );
+    const results = await res.json();
+    if (results && results.length > 0) {
+      const coords = {
+        lat: parseFloat(results[0].lat),
+        lng: parseFloat(results[0].lon),
+      };
+      _geocodeCache[key] = coords;
+      console.log(
+        `[FixMate] Geocoded "${cityName}" → ${coords.lat}, ${coords.lng}`,
+      );
+      return coords;
+    }
+  } catch (e) {
+    console.warn(`[FixMate] Geocode failed for "${cityName}":`, e);
+  }
+  _geocodeCache[key] = null;
+  return null;
+}
+
 async function loadMechanics() {
   document.getElementById("results-title").textContent = "Finding mechanics…";
   document.getElementById("results-sub").textContent = "";
@@ -465,13 +500,25 @@ async function loadMechanics() {
     </div>`;
 
   try {
-    // Query approved mechanic_applications from Supabase
+    // Query approved mechanic_applications from Supabase.
+    // Also accept rows with blank/missing status so demo data appears.
+    console.log(
+      "[FixMate] Querying mechanic_applications (status=approved or blank)…",
+    );
     const { data, error } = await supabaseClient
       .from("mechanic_applications")
       .select("*")
-      .eq("status", "approved");
+      .or("status.ilike.%approved%,status.is.null,status.eq.");
 
-    if (error) throw error;
+    if (error) {
+      console.error("[FixMate] Supabase query error:", error);
+      throw error;
+    }
+
+    console.log(
+      `[FixMate] Found ${data ? data.length : 0} approved mechanic(s)`,
+      data,
+    );
 
     if (!data || data.length === 0) {
       mechanics = [];
@@ -479,19 +526,31 @@ async function loadMechanics() {
       return;
     }
 
-    // Map Supabase rows to display format
-    mechanics = data.map((row) => {
-      // If mechanic has lat/lng stored, use it; otherwise assign random offset for demo
-      const mLat =
-        row.latitude ??
-        (userCoords
-          ? userCoords.lat + (Math.random() - 0.5) * 0.04
-          : 6.927 + (Math.random() - 0.5) * 0.04);
-      const mLng =
-        row.longitude ??
-        (userCoords
-          ? userCoords.lng + (Math.random() - 0.5) * 0.04
-          : 79.861 + (Math.random() - 0.5) * 0.04);
+    // Map Supabase rows to display format, geocoding location when lat/lng are missing
+    const mechanicPromises = data.map(async (row) => {
+      let mLat = row.latitude != null ? parseFloat(row.latitude) : null;
+      let mLng = row.longitude != null ? parseFloat(row.longitude) : null;
+      const locationHint = row.city || row.address || row.location || "";
+
+      // If no stored coordinates, geocode the city/area/address name
+      if (mLat == null || mLng == null || isNaN(mLat) || isNaN(mLng)) {
+        const cityCoords = await geocodeCity(locationHint);
+        if (cityCoords) {
+          // Add a small random offset so multiple mechanics in the same city
+          // don't stack on the exact same map point
+          mLat = cityCoords.lat + (Math.random() - 0.5) * 0.02;
+          mLng = cityCoords.lng + (Math.random() - 0.5) * 0.02;
+        } else {
+          // Last resort: offset from user location or default to Colombo
+          mLat = userCoords
+            ? userCoords.lat + (Math.random() - 0.5) * 0.04
+            : 6.927 + (Math.random() - 0.5) * 0.04;
+          mLng = userCoords
+            ? userCoords.lng + (Math.random() - 0.5) * 0.04
+            : 79.861 + (Math.random() - 0.5) * 0.04;
+        }
+      }
+
       const dist = userCoords
         ? haversine(userCoords.lat, userCoords.lng, mLat, mLng)
         : 0;
@@ -510,14 +569,19 @@ async function loadMechanics() {
         initials: getInitials(row.full_name),
         lat: mLat,
         lng: mLng,
+        city: row.city ?? "",
       };
     });
 
+    // Wait for all geocoding to complete
+    mechanics = await Promise.all(mechanicPromises);
+
     // Sort by distance
     mechanics.sort((a, b) => a.dist - b.dist);
+    console.log("[FixMate] Mechanics ready to render:", mechanics);
     renderMechanics(mechanics);
   } catch (err) {
-    console.error("Supabase error:", err);
+    console.error("[FixMate] loadMechanics error:", err);
     document.getElementById("mechanics-list").innerHTML = `
       <div class="no-results">
         <span class="material-symbols-outlined">error</span>

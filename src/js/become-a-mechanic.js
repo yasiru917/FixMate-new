@@ -36,6 +36,8 @@ form.addEventListener("submit", async (e) => {
   const phone = document.getElementById("m-phone").value.trim();
   const email = document.getElementById("m-email").value.trim();
   const city = document.getElementById("m-city").value.trim();
+  const lat = parseFloat(document.getElementById("m-lat").value);
+  const lng = parseFloat(document.getElementById("m-lng").value);
   const experience = document.getElementById("m-exp").value;
   const vehicleTypes = document.getElementById("m-vehicles").value;
   const ownTools =
@@ -60,6 +62,13 @@ form.addEventListener("submit", async (e) => {
     setErr("err-city", "City / area is required.");
     hasError = true;
   }
+  if (isNaN(lat) || isNaN(lng)) {
+    setErr(
+      "err-location",
+      "Please detect your business location using the button above.",
+    );
+    hasError = true;
+  }
   if (!experience) {
     setErr("err-exp", "Please select your experience.");
     hasError = true;
@@ -78,21 +87,21 @@ form.addEventListener("submit", async (e) => {
   submitBtn.disabled = true;
   submitBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size:20px; animation:spin 1s linear infinite;">progress_activity</span> Submitting…`;
 
-  const { error } = await supabaseClient
-    .from("mechanic_applications") // 🔁 Make sure this table exists — see SQL below
-    .insert([
-      {
-        full_name: name,
-        phone,
-        email,
-        city,
-        experience,
-        vehicle_types: vehicleTypes,
-        own_tools: ownTools === "yes",
-        description: description || null,
-        status: "pending", // pending | approved | rejected
-      },
-    ]);
+  const { error } = await supabaseClient.from("mechanic_applications").insert([
+    {
+      full_name: name,
+      phone,
+      email,
+      city,
+      lat,
+      lng,
+      experience,
+      vehicle_types: vehicleTypes,
+      own_tools: ownTools === "yes",
+      description: description || null,
+      status: "pending",
+    },
+  ]);
 
   submitBtn.disabled = false;
   submitBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size:20px;">send</span> Submit Application`;

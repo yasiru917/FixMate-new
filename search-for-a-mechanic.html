@@ -18,9 +18,13 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <link rel="stylesheet" href="./src/output.css" />
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
+    /* ═══════════════════════════════════════════════════════════
+       BASE
+    ═══════════════════════════════════════════════════════════ */
     :root {
       --primary: #003d9b;
       --primary-lt: #4f7cff;
@@ -40,21 +44,24 @@
       box-sizing: border-box;
     }
 
+    html,
     body {
+      height: 100%;
+      margin: 0;
       font-family: "Inter", sans-serif;
       background: var(--surface);
       color: var(--text);
-      margin: 0;
-      min-height: 100dvh;
       display: flex;
       flex-direction: column;
     }
 
-    /* ════ NAV ════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════════
+       NAV
+    ═══════════════════════════════════════════════════════════ */
     .top-nav {
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 200;
       background: #fff;
       border-bottom: 1px solid var(--outline);
       display: flex;
@@ -62,7 +69,6 @@
       justify-content: space-between;
       padding: 0 1.25rem;
       height: 60px;
-      gap: 0.75rem;
       flex-shrink: 0;
     }
 
@@ -81,12 +87,12 @@
       background: none;
       border: none;
       cursor: pointer;
+      text-decoration: none;
       font-size: 0.875rem;
       font-weight: 600;
       color: var(--muted);
       padding: 0.4rem 0.75rem;
       border-radius: 9999px;
-      text-decoration: none;
       transition: background 0.15s, color 0.15s;
     }
 
@@ -95,14 +101,15 @@
       color: var(--primary);
     }
 
-    /* ════ STEP INDICATOR ═════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════════
+       STEP BAR
+    ═══════════════════════════════════════════════════════════ */
     .step-bar {
       background: #fff;
       border-bottom: 1px solid var(--outline);
       padding: 0.875rem 1.25rem;
       display: flex;
       align-items: center;
-      gap: 0;
       flex-shrink: 0;
     }
 
@@ -112,17 +119,19 @@
       gap: 0.5rem;
       flex: 1;
       cursor: pointer;
+      opacity: 0.4;
       transition: opacity 0.2s;
     }
 
-    .step-item:not(.active) {
-      opacity: 0.4;
+    .step-item.active,
+    .step-item.done {
+      opacity: 1;
     }
 
     .step-circle {
       width: 28px;
       height: 28px;
-      border-radius: 9999px;
+      border-radius: 50%;
       flex-shrink: 0;
       display: flex;
       align-items: center;
@@ -130,7 +139,7 @@
       font-size: 0.8rem;
       font-weight: 700;
       font-family: "Manrope", sans-serif;
-      background: var(--outline);
+      background: #e8eaf0;
       color: var(--muted);
       transition: background 0.2s, color 0.2s;
     }
@@ -148,52 +157,113 @@
     .step-label {
       font-size: 0.8125rem;
       font-weight: 600;
-      color: var(--text);
       white-space: nowrap;
     }
 
-    .step-connector {
+    .step-conn {
       flex: 0 0 1.5rem;
       height: 2px;
       background: var(--outline);
       margin: 0 0.25rem;
+      transition: background 0.3s;
     }
 
-    .step-connector.done {
+    .step-conn.done {
       background: var(--primary);
     }
 
-    /* ════ MAIN LAYOUT ════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════════
+       PAGE BODY + STEP PANELS
+    ═══════════════════════════════════════════════════════════ */
     .page-body {
       flex: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      min-height: 0;
     }
 
-    /* Each step panel */
     .step-panel {
       display: none;
       flex-direction: column;
       flex: 1;
       overflow: hidden;
+      min-height: 0;
     }
 
     .step-panel.active {
       display: flex;
     }
 
-    /* ════ STEP 1 — LOCATION ══════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════════
+       STEP 1 — MAP
+    ═══════════════════════════════════════════════════════════ */
     #step1 {
       position: relative;
     }
 
     #map {
-      position: relative;
-      z-index: 1;
       flex: 1;
       min-height: 0;
-      background: #d4e5ff;
+      z-index: 1;
+    }
+
+    /* Leaflet overrides */
+    .leaflet-container {
+      font-family: "Inter", sans-serif;
+    }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .leaflet-popup-content {
+      margin: 0.75rem 1rem;
+      font-size: 0.875rem;
+    }
+
+    /* User location dot */
+    .user-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 4px rgba(0, 61, 155, 0.25), 0 2px 8px rgba(0, 0, 0, 0.3);
+      animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 4px rgba(0, 61, 155, 0.25), 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      50% {
+        box-shadow: 0 0 0 12px rgba(0, 61, 155, 0.08), 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    /* Mechanic pin */
+    .mech-pin {
+      border-radius: 50%;
+      border: 2.5px solid #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 800;
+      font-family: "Manrope", sans-serif;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .mech-pin:hover {
+      transform: scale(1.15);
     }
 
     /* Map overlay card */
@@ -208,27 +278,27 @@
       border-radius: 1rem;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
       padding: 1.25rem;
-      z-index: 1000;
+      z-index: 10;
     }
 
     .map-overlay h3 {
       font-family: "Manrope", sans-serif;
       font-size: 1rem;
       font-weight: 700;
-      margin: 0 0 0.25rem;
+      margin: 0 0 0.2rem;
       color: var(--text);
     }
 
     .map-overlay p {
-      font-size: 0.8375rem;
+      font-size: 0.825rem;
       color: var(--muted);
       margin: 0 0 1rem;
       line-height: 1.5;
     }
 
-    .location-display {
+    .loc-display {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 0.625rem;
       background: #f0f4ff;
       border-radius: 0.625rem;
@@ -237,16 +307,17 @@
       min-height: 44px;
     }
 
-    .location-display .material-symbols-outlined {
+    .loc-display .material-symbols-outlined {
       color: var(--primary);
       font-size: 20px;
       flex-shrink: 0;
+      margin-top: 1px;
     }
 
     #location-text {
-      font-size: 0.8375rem;
+      font-size: 0.825rem;
       color: var(--text);
-      line-height: 1.4;
+      line-height: 1.45;
     }
 
     .btn-locate {
@@ -265,7 +336,7 @@
       font-family: "Manrope", sans-serif;
       cursor: pointer;
       transition: background 0.15s;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.625rem;
     }
 
     .btn-locate:hover:not(:disabled) {
@@ -277,7 +348,12 @@
       cursor: not-allowed;
     }
 
-    .btn-next-loc {
+    .btn-locate .spin {
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+
+    .btn-next {
       width: 100%;
       display: flex;
       align-items: center;
@@ -292,33 +368,40 @@
       font-weight: 700;
       font-family: "Manrope", sans-serif;
       cursor: pointer;
-      transition: background 0.15s;
-      opacity: 0.4;
+      opacity: 0.35;
       pointer-events: none;
+      transition: background 0.15s, opacity 0.2s;
     }
 
-    .btn-next-loc.ready {
+    .btn-next.ready {
       opacity: 1;
       pointer-events: auto;
     }
 
-    .btn-next-loc.ready:hover {
+    .btn-next.ready:hover {
       background: #3a6aee;
     }
 
-    /* ════ STEP 2 — PROBLEM ═══════════════════════════════════ */
-    .problem-wrap {
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       STEP 2 — PROBLEM
+    ═══════════════════════════════════════════════════════════ */
+    .prob-wrap {
       flex: 1;
       overflow-y: auto;
       padding: 1.25rem;
     }
 
-    .problem-card {
+    .prob-card {
       background: var(--card);
       border: 1px solid var(--outline);
       border-radius: 1rem;
       overflow: hidden;
-      margin-bottom: 1rem;
     }
 
     .prob-tabs {
@@ -328,21 +411,21 @@
 
     .prob-tab {
       flex: 1;
-      padding: 0.875rem 0.5rem;
+      padding: 0.875rem 0.25rem;
       text-align: center;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
       border: none;
       background: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
       color: var(--muted);
-      transition: color 0.15s, border-bottom 0.15s;
-      border-bottom: 2px solid transparent;
       font-family: "Inter", sans-serif;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.25rem;
+      gap: 0.2rem;
     }
 
     .prob-tab .material-symbols-outlined {
@@ -354,16 +437,16 @@
       border-bottom-color: var(--primary);
     }
 
-    .prob-tab-panel {
+    .prob-panel {
       display: none;
       padding: 1.25rem;
     }
 
-    .prob-tab-panel.active {
+    .prob-panel.active {
       display: block;
     }
 
-    /* Know the problem tab */
+    /* Know tab */
     .prob-label {
       font-size: 0.8125rem;
       font-weight: 600;
@@ -371,7 +454,7 @@
       margin-bottom: 0.5rem;
     }
 
-    .prob-input {
+    .prob-textarea {
       width: 100%;
       padding: 0.75rem 1rem;
       border: 1.5px solid var(--outline);
@@ -379,27 +462,28 @@
       font-size: 0.9375rem;
       font-family: "Inter", sans-serif;
       color: var(--text);
-      outline: none;
       background: var(--surface);
+      outline: none;
+      resize: vertical;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
 
-    .prob-input:focus {
+    .prob-textarea:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(0, 61, 155, 0.1);
     }
 
-    .prob-tags {
+    .tag-wrap {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 0.45rem;
       margin-top: 0.875rem;
     }
 
     .prob-tag {
-      padding: 0.35rem 0.875rem;
+      padding: 0.3rem 0.8rem;
       border-radius: 9999px;
-      font-size: 0.8rem;
+      font-size: 0.775rem;
       font-weight: 600;
       cursor: pointer;
       border: 1.5px solid var(--outline);
@@ -408,22 +492,14 @@
       transition: all 0.15s;
     }
 
-    .prob-tag.selected {
+    .prob-tag.sel {
       background: #f0f4ff;
       color: var(--primary);
       border-color: var(--primary);
     }
 
     /* Quiz tab */
-    .quiz-q {
-      font-family: "Manrope", sans-serif;
-      font-size: 0.9375rem;
-      font-weight: 700;
-      margin-bottom: 0.875rem;
-      color: var(--text);
-    }
-
-    .quiz-progress {
+    .quiz-prog {
       height: 4px;
       background: var(--outline);
       border-radius: 9999px;
@@ -435,13 +511,21 @@
       height: 100%;
       background: var(--primary);
       border-radius: 9999px;
-      transition: width 0.3s ease;
+      transition: width 0.35s ease;
     }
 
-    .quiz-options {
+    .quiz-q {
+      font-family: "Manrope", sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      margin-bottom: 0.875rem;
+      color: var(--text);
+    }
+
+    .quiz-opts {
       display: flex;
       flex-direction: column;
-      gap: 0.625rem;
+      gap: 0.6rem;
     }
 
     .quiz-opt {
@@ -473,8 +557,9 @@
       font-weight: 600;
     }
 
-    .quiz-opt .opt-icon {
-      font-size: 1.25rem;
+    .quiz-opt .oi {
+      font-size: 1.2rem;
+      flex-shrink: 0;
     }
 
     .quiz-nav {
@@ -483,7 +568,7 @@
       margin-top: 1.25rem;
     }
 
-    .btn-quiz {
+    .btn-qz {
       flex: 1;
       padding: 0.625rem;
       border-radius: 0.625rem;
@@ -497,23 +582,23 @@
       transition: all 0.15s;
     }
 
-    .btn-quiz.primary {
+    .btn-qz.pri {
       background: var(--primary);
       color: #fff;
       border-color: var(--primary);
     }
 
-    .btn-quiz.primary:hover {
+    .btn-qz.pri:hover {
       background: #002f78;
     }
 
-    .btn-quiz:hover:not(.primary) {
+    .btn-qz:not(.pri):hover {
       background: #f0f4ff;
       color: var(--primary);
       border-color: var(--primary);
     }
 
-    #quiz-result {
+    .quiz-result {
       display: none;
       padding: 1rem;
       background: #f0f4ff;
@@ -523,41 +608,56 @@
       font-weight: 600;
       margin-top: 0.75rem;
       border: 1px solid rgba(0, 61, 155, 0.15);
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
-    /* Upload tab */
+    .quiz-result .restart-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-top: 0.875rem;
+      background: none;
+      border: 1.5px solid var(--primary);
+      color: var(--primary);
+      padding: 0.375rem 0.875rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: "Inter", sans-serif;
+      transition: background 0.15s;
+    }
+
+    .quiz-result .restart-btn:hover {
+      background: rgba(0, 61, 155, 0.08);
+    }
+
+    /* Photo tab */
     .upload-zone {
       border: 2px dashed var(--outline);
       border-radius: 0.875rem;
       padding: 2rem 1rem;
       text-align: center;
       cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
       background: var(--surface);
+      transition: border-color 0.15s, background 0.15s;
     }
 
     .upload-zone:hover,
-    .upload-zone.dragover {
+    .upload-zone.drag {
       border-color: var(--primary);
       background: #f0f4ff;
     }
 
-    .upload-icon {
-      font-size: 2.5rem;
-      color: var(--primary-lt);
-      margin-bottom: 0.75rem;
-    }
-
-    .upload-label {
+    .upload-lbl {
       font-size: 0.9rem;
       font-weight: 600;
       color: var(--text);
-      margin-bottom: 0.25rem;
+      margin: 0.625rem 0 0.25rem;
     }
 
     .upload-sub {
-      font-size: 0.78rem;
+      font-size: 0.775rem;
       color: var(--muted);
     }
 
@@ -569,7 +669,7 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 0.5rem;
-      margin-top: 1rem;
+      margin-top: 0.875rem;
     }
 
     .preview-img {
@@ -580,18 +680,38 @@
       border: 1px solid var(--outline);
     }
 
+    .preview-wrap {
+      position: relative;
+    }
+
+    .preview-del {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      border: none;
+      line-height: 1;
+    }
+
     /* Step 2 footer */
     .prob-footer {
-      padding: 1rem 1.25rem;
+      padding: 0.875rem 1.25rem;
       background: #fff;
       border-top: 1px solid var(--outline);
-      display: flex;
-      gap: 0.75rem;
       flex-shrink: 0;
     }
 
     .btn-find {
-      flex: 1;
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -612,14 +732,16 @@
       background: #002f78;
     }
 
-    /* ════ STEP 3 — RESULTS ═══════════════════════════════════ */
-    .results-wrap {
+    /* ═══════════════════════════════════════════════════════════
+       STEP 3 — RESULTS
+    ═══════════════════════════════════════════════════════════ */
+    .res-wrap {
       flex: 1;
       overflow-y: auto;
       padding: 1.25rem;
     }
 
-    .results-header {
+    .res-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -628,18 +750,19 @@
       gap: 0.5rem;
     }
 
-    .results-title {
+    .res-title {
       font-family: "Manrope", sans-serif;
       font-size: 1rem;
       font-weight: 700;
     }
 
-    .results-sub {
-      font-size: 0.8rem;
+    .res-sub {
+      font-size: 0.78rem;
       color: var(--muted);
+      margin-top: 0.1rem;
     }
 
-    .sort-select {
+    .sort-sel {
       font-size: 0.8rem;
       font-weight: 600;
       color: var(--primary);
@@ -658,11 +781,12 @@
       border-radius: 1rem;
       padding: 1.125rem;
       margin-bottom: 0.875rem;
-      transition: box-shadow 0.2s;
+      transition: box-shadow 0.2s, transform 0.2s;
     }
 
     .mech-card:hover {
       box-shadow: 0 4px 20px rgba(0, 61, 155, 0.1);
+      transform: translateY(-1px);
     }
 
     .mech-top {
@@ -671,16 +795,16 @@
       gap: 0.875rem;
     }
 
-    .mech-avatar {
+    .mech-av {
       width: 52px;
       height: 52px;
-      border-radius: 9999px;
+      border-radius: 50%;
       flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: "Manrope", sans-serif;
-      font-size: 1.25rem;
+      font-size: 1.1rem;
       font-weight: 800;
       color: #fff;
     }
@@ -694,11 +818,10 @@
       font-family: "Manrope", sans-serif;
       font-size: 0.9375rem;
       font-weight: 700;
-      color: var(--text);
     }
 
     .mech-spec {
-      font-size: 0.78rem;
+      font-size: 0.775rem;
       color: var(--muted);
       margin-top: 0.15rem;
     }
@@ -706,42 +829,42 @@
     .mech-meta {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
       margin-top: 0.5rem;
       flex-wrap: wrap;
     }
 
-    .mech-badge {
+    .mbadge {
       display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
-      font-size: 0.72rem;
+      gap: 0.2rem;
+      font-size: 0.7rem;
       font-weight: 700;
-      padding: 0.2rem 0.6rem;
+      padding: 0.2rem 0.55rem;
       border-radius: 9999px;
     }
 
-    .badge-avail {
+    .b-avail {
       background: #e8f5e9;
       color: #2e7d32;
     }
 
-    .badge-busy {
+    .b-busy {
       background: #fff3e0;
       color: #e65100;
     }
 
-    .badge-dist {
+    .b-dist {
       background: #f0f4ff;
       color: var(--primary);
     }
 
-    .badge-rating {
+    .b-rating {
       background: #fffde7;
       color: #f57f17;
     }
 
-    .mech-divider {
+    .mech-div {
       height: 1px;
       background: var(--outline);
       margin: 0.875rem 0;
@@ -757,7 +880,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 0.45rem;
       background: var(--whatsapp);
       color: #fff;
       border: none;
@@ -780,7 +903,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 0.45rem;
       background: #fff;
       color: var(--primary);
       border: 1.5px solid var(--primary);
@@ -798,60 +921,92 @@
       background: #f0f4ff;
     }
 
-    /* WhatsApp SVG icon */
-    .wa-icon {
-      width: 18px;
-      height: 18px;
+    .wa-svg {
+      width: 17px;
+      height: 17px;
       flex-shrink: 0;
     }
 
-    /* Loading state */
+    /* View on map button */
+    .btn-map-view {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      width: 100%;
+      margin-top: 0.875rem;
+      padding: 0.625rem;
+      background: #f0f4ff;
+      color: var(--primary);
+      border: 1.5px solid rgba(0, 61, 155, 0.2);
+      border-radius: 0.625rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: "Inter", sans-serif;
+      transition: background 0.15s;
+    }
+
+    .btn-map-view:hover {
+      background: #e0eaff;
+    }
+
+    /* Loading / empty */
     .loading-card {
       background: var(--card);
       border-radius: 1rem;
-      padding: 2rem;
+      padding: 2.5rem;
       text-align: center;
       border: 1px solid var(--outline);
     }
 
     .spinner {
-      width: 40px;
-      height: 40px;
+      width: 38px;
+      height: 38px;
       border: 3px solid var(--outline);
       border-top-color: var(--primary);
-      border-radius: 9999px;
-      animation: spin 0.8s linear infinite;
+      border-radius: 50%;
+      animation: spin 0.85s linear infinite;
       margin: 0 auto 1rem;
     }
 
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* No results */
-    .no-results {
+    .no-res {
       text-align: center;
       padding: 3rem 1rem;
       color: var(--muted);
       font-size: 0.9rem;
     }
 
-    .no-results .material-symbols-outlined {
+    .no-res .material-symbols-outlined {
       font-size: 3rem;
-      color: var(--outline);
+      color: #d0d6e2;
       margin-bottom: 0.75rem;
       display: block;
     }
 
-    /* ════ TOAST ══════════════════════════════════════════════ */
+    /* DB badge */
+    .db-note {
+      background: #f0f4ff;
+      border: 1px solid rgba(0, 61, 155, 0.15);
+      border-radius: 0.625rem;
+      padding: 0.625rem 0.875rem;
+      font-size: 0.775rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       TOAST
+    ═══════════════════════════════════════════════════════════ */
     .toast {
       position: fixed;
       top: 1rem;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 999;
+      z-index: 9999;
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -860,93 +1015,48 @@
       font-size: 0.875rem;
       font-weight: 600;
       white-space: nowrap;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
-      transition: opacity 0.3s, transform 0.3s;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
-    .toast-info {
+    .t-info {
       background: var(--primary);
       color: #fff;
     }
 
-    .toast-success {
+    .t-success {
       background: var(--green);
       color: #fff;
     }
 
-    .toast-error {
+    .t-error {
       background: var(--red);
       color: #fff;
     }
 
-    .toast-hidden {
+    .t-hidden {
       opacity: 0;
       pointer-events: none;
       transform: translateX(-50%) translateY(-10px);
     }
 
-    /* ════ LEAFLET MARKER STYLES ═════════════════════════════ */
-    .user-pulse-marker {
-      background: none;
-      border: none;
-    }
-
-    .pulse-dot {
-      width: 20px;
-      height: 20px;
-      border-radius: 9999px;
-      background: #003d9b;
-      border: 3px solid #fff;
-      box-shadow: 0 0 0 4px rgba(0, 61, 155, 0.25), 0 2px 8px rgba(0, 0, 0, 0.3);
-      animation: pulse-dot 1.8s ease-in-out infinite;
-    }
-
-    @keyframes pulse-dot {
-
-      0%,
-      100% {
-        box-shadow: 0 0 0 4px rgba(0, 61, 155, 0.25), 0 2px 8px rgba(0, 0, 0, 0.3)
-      }
-
-      50% {
-        box-shadow: 0 0 0 10px rgba(0, 61, 155, 0.1), 0 2px 8px rgba(0, 0, 0, 0.3)
-      }
-    }
-
-    .mech-map-pin {
-      background: none;
-      border: none;
-    }
-
-    .mech-pin {
-      width: 36px;
-      height: 36px;
-      border-radius: 9999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-family: "Manrope", sans-serif;
-      font-size: 0.7rem;
-      font-weight: 800;
-      border: 2px solid #fff;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    /* ════ RESPONSIVE TWEAKS ══════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════════════ */
     @media (min-width: 768px) {
       #map {
-        min-height: 420px;
+        min-height: 400px;
       }
 
       .map-overlay {
         bottom: 2rem;
       }
 
-      .problem-wrap,
-      .results-wrap {
+      .prob-wrap,
+      .res-wrap {
         max-width: 680px;
-        margin: 0 auto;
+        margin-left: auto;
+        margin-right: auto;
       }
     }
   </style>
@@ -955,11 +1065,11 @@
 <body>
 
   <!-- Toast -->
-  <div id="toast" class="toast toast-hidden" role="alert" aria-live="polite">
+  <div id="toast" class="toast t-hidden" role="alert" aria-live="polite">
     <span id="toast-msg"></span>
   </div>
 
-  <!-- ════ NAV ════════════════════════════════════════════════ -->
+  <!-- ══ NAV ════════════════════════════════════════════════ -->
   <nav class="top-nav">
     <a href="index.html" class="btn-back">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -968,126 +1078,116 @@
       Home
     </a>
     <a href="index.html" class="nav-brand">FixMate</a>
-    <div style="width:80px;"></div><!-- spacer -->
+    <div style="width:72px"></div>
   </nav>
 
-  <!-- ════ STEP BAR ═══════════════════════════════════════════ -->
+  <!-- ══ STEP BAR ════════════════════════════════════════════ -->
   <div class="step-bar">
-    <div class="step-item active" id="step-item-1" onclick="goToStep(1)">
-      <div class="step-circle" id="step-circle-1">1</div>
+    <div class="step-item active" id="si1" onclick="goToStep(1)">
+      <div class="step-circle" id="sc1">1</div>
       <span class="step-label">Location</span>
     </div>
-    <div class="step-connector" id="conn-1"></div>
-    <div class="step-item" id="step-item-2" onclick="goToStep(2)">
-      <div class="step-circle" id="step-circle-2">2</div>
+    <div class="step-conn" id="conn1"></div>
+    <div class="step-item" id="si2" onclick="goToStep(2)">
+      <div class="step-circle" id="sc2">2</div>
       <span class="step-label">Problem</span>
     </div>
-    <div class="step-connector" id="conn-2"></div>
-    <div class="step-item" id="step-item-3" onclick="goToStep(3)">
-      <div class="step-circle" id="step-circle-3">3</div>
+    <div class="step-conn" id="conn2"></div>
+    <div class="step-item" id="si3" onclick="goToStep(3)">
+      <div class="step-circle" id="sc3">3</div>
       <span class="step-label">Mechanics</span>
     </div>
   </div>
 
-  <!-- ════ PAGE BODY ═══════════════════════════════════════════ -->
+  <!-- ══ PAGE BODY ═══════════════════════════════════════════ -->
   <div class="page-body">
 
-    <!-- ══ STEP 1: LOCATION ══════════════════════════════════ -->
+    <!-- ▸ STEP 1: LOCATION ─────────────────────────────────── -->
     <div class="step-panel active" id="step1">
-
-      <!-- Mapbox map fills the space -->
       <div id="map"></div>
 
-      <!-- Overlay card -->
       <div class="map-overlay">
         <h3>Where are you right now?</h3>
-        <p>We'll use your location to find the nearest available mechanics.</p>
+        <p>We'll find the nearest available mechanics once we have your location.</p>
 
-        <div class="location-display">
+        <div class="loc-display">
           <span class="material-symbols-outlined">location_on</span>
           <span id="location-text">Location not detected yet</span>
         </div>
 
         <button class="btn-locate" id="locate-btn" onclick="requestLocation()">
-          <span class="material-symbols-outlined" style="font-size:20px;">my_location</span>
-          Use My Current Location
+          <span class="material-symbols-outlined" id="locate-icon" style="font-size:20px;">my_location</span>
+          <span id="locate-label">Use My Current Location</span>
         </button>
 
-        <button class="btn-next-loc" id="next-to-step2" onclick="goToStep(2)">
+        <button class="btn-next" id="btn-next1" onclick="goToStep(2)">
           Continue to Problem
           <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
         </button>
       </div>
-
     </div>
 
-    <!-- ══ STEP 2: PROBLEM ════════════════════════════════════ -->
+    <!-- ▸ STEP 2: PROBLEM ──────────────────────────────────── -->
     <div class="step-panel" id="step2">
-      <div class="problem-wrap">
-
-        <div class="problem-card">
+      <div class="prob-wrap">
+        <div class="prob-card">
 
           <!-- Tabs -->
           <div class="prob-tabs">
-            <button class="prob-tab active" onclick="switchProbTab('know')" id="tab-know">
+            <button class="prob-tab active" id="tab-know" onclick="switchTab('know')">
               <span class="material-symbols-outlined">edit_note</span>
-              I Know the Problem
+              I Know
             </button>
-            <button class="prob-tab" onclick="switchProbTab('quiz')" id="tab-quiz">
+            <button class="prob-tab" id="tab-quiz" onclick="switchTab('quiz')">
               <span class="material-symbols-outlined">quiz</span>
-              Help Me Diagnose
+              Diagnose Me
             </button>
-            <button class="prob-tab" onclick="switchProbTab('photo')" id="tab-photo">
+            <button class="prob-tab" id="tab-photo" onclick="switchTab('photo')">
               <span class="material-symbols-outlined">photo_camera</span>
               Upload Photo
             </button>
           </div>
 
-          <!-- Tab: Know the problem -->
-          <div class="prob-tab-panel active" id="panel-know">
+          <!-- Panel: Know -->
+          <div class="prob-panel active" id="panel-know">
             <p class="prob-label">Describe the issue with your vehicle</p>
-            <textarea id="problem-text" class="prob-input" rows="3"
-              placeholder="e.g. Car won't start, flat tyre, engine overheating, battery dead…"></textarea>
-
-            <div class="prob-tags" id="quick-tags">
-              <!-- populated by JS -->
-            </div>
+            <textarea id="prob-text" class="prob-textarea" rows="3"
+              placeholder="e.g. Car won't start, flat tyre, engine overheating…"
+              oninput="updateProblemDesc()"></textarea>
+            <div class="tag-wrap" id="tag-wrap"></div>
           </div>
 
-          <!-- Tab: Quiz -->
-          <div class="prob-tab-panel" id="panel-quiz">
-            <div class="quiz-progress">
-              <div class="quiz-bar" id="quiz-bar" style="width:0%"></div>
+          <!-- Panel: Quiz -->
+          <div class="prob-panel" id="panel-quiz">
+            <div class="quiz-prog">
+              <div class="quiz-bar" id="quiz-bar"></div>
             </div>
-            <p class="quiz-q" id="quiz-question">Loading quiz…</p>
-            <div class="quiz-options" id="quiz-options"></div>
-            <div class="quiz-nav">
-              <button class="btn-quiz" id="quiz-back-btn" onclick="quizBack()" style="display:none;">← Back</button>
-              <button class="btn-quiz primary" id="quiz-next-btn" onclick="quizNext()">Next →</button>
+            <p class="quiz-q" id="quiz-q"></p>
+            <div class="quiz-opts" id="quiz-opts"></div>
+            <div class="quiz-nav" id="quiz-nav">
+              <button class="btn-qz" id="quiz-back" onclick="quizBack()">← Back</button>
+              <button class="btn-qz pri" id="quiz-next" onclick="quizNext()">Next →</button>
             </div>
-            <div id="quiz-result"></div>
+            <div class="quiz-result" id="quiz-result"></div>
           </div>
 
-          <!-- Tab: Upload photo -->
-          <div class="prob-tab-panel" id="panel-photo">
+          <!-- Panel: Photo -->
+          <div class="prob-panel" id="panel-photo">
             <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
-              ondragover="event.preventDefault(); this.classList.add('dragover')"
-              ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
-              <div class="upload-icon">
-                <span class="material-symbols-outlined" style="font-size:2.5rem; color:#4f7cff;">cloud_upload</span>
-              </div>
-              <div class="upload-label">Tap to upload photos of your vehicle</div>
-              <div class="upload-sub">JPG, PNG or HEIC · Up to 5 photos · 10 MB each</div>
+              ondragover="event.preventDefault(); this.classList.add('drag')"
+              ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+              <span class="material-symbols-outlined"
+                style="font-size:2.5rem; color:var(--primary-lt);">cloud_upload</span>
+              <div class="upload-lbl">Tap to upload photos of your vehicle</div>
+              <div class="upload-sub">JPG · PNG · HEIC &nbsp;·&nbsp; Up to 5 photos</div>
             </div>
             <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)" />
             <div class="preview-grid" id="preview-grid"></div>
           </div>
 
-        </div><!-- /problem-card -->
+        </div>
+      </div>
 
-      </div><!-- /problem-wrap -->
-
-      <!-- Footer -->
       <div class="prob-footer">
         <button class="btn-find" onclick="findMechanics()">
           <span class="material-symbols-outlined" style="font-size:20px;">search</span>
@@ -1096,48 +1196,782 @@
       </div>
     </div>
 
-    <!-- ══ STEP 3: RESULTS ════════════════════════════════════ -->
+    <!-- ▸ STEP 3: RESULTS ─────────────────────────────────── -->
     <div class="step-panel" id="step3">
-      <div class="results-wrap">
-
-        <div class="results-header">
+      <div class="res-wrap">
+        <div class="res-header">
           <div>
-            <div class="results-title" id="results-title">Finding mechanics…</div>
-            <div class="results-sub" id="results-sub"></div>
+            <div class="res-title" id="res-title">Searching…</div>
+            <div class="res-sub" id="res-sub"></div>
           </div>
-          <select class="sort-select" id="sort-select" onchange="sortMechanics(this.value)">
+          <select class="sort-sel" id="sort-sel" onchange="sortMechanics(this.value)">
             <option value="distance">Nearest first</option>
             <option value="rating">Top rated</option>
             <option value="available">Available now</option>
           </select>
         </div>
 
-        <div id="mechanics-list">
-          <!-- Loading state -->
-          <div class="loading-card" id="loading-card">
-            <div class="spinner"></div>
-            <p style="color:var(--muted); font-size:0.875rem; margin:0;">Searching for mechanics nearby…</p>
-          </div>
-        </div>
+        <div id="mech-list"></div>
 
+        <button class="btn-map-view" onclick="goToStep(1)">
+          <span class="material-symbols-outlined" style="font-size:18px;">map</span>
+          View mechanics on map
+        </button>
       </div>
     </div>
 
   </div><!-- /page-body -->
 
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Spin animation for loading icons
-    if (!document.getElementById("spin-style")) {
-      const s = document.createElement("style");
-      s.id = "spin-style";
-      s.textContent = "@keyframes spin { to { transform: rotate(360deg); } }";
-      document.head.appendChild(s);
+    /* ══════════════════════════════════════════════════════════
+       SUPABASE CLIENT
+    ══════════════════════════════════════════════════════════ */
+    const { createClient } = supabase;
+    const sb = createClient(
+      "https://vgjltmohtjvtwxnrsxkv.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnamx0bW9odGp2dHd4bnJzeGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3MjAzNzcsImV4cCI6MjA5MzI5NjM3N30.4mxPQMezSRjPkltSYZad00eqb-wqkXPoCUDLQNBQJ7I"
+    );
+
+    /* ══════════════════════════════════════════════════════════
+       STATE
+    ══════════════════════════════════════════════════════════ */
+    let userCoords = null;   // { lat, lng }
+    let map = null;
+    let userMarker = null;
+    let mechMarkers = [];
+    let currentStep = 1;
+    let problemDesc = "";
+    let mechanics = [];     // displayed list
+    let allMechanics = [];    // full fetched list (for re-sorting)
+    let quizIndex = 0;
+    let quizAnswers = {};     // { questionIndex: optionIndex }
+    let uploadedFiles = [];
+
+    /* ══════════════════════════════════════════════════════════
+       TOAST
+    ══════════════════════════════════════════════════════════ */
+    let toastTimer;
+    function toast(msg, type = "info", ms = 3500) {
+      clearTimeout(toastTimer);
+      const el = document.getElementById("toast");
+      document.getElementById("toast-msg").textContent = msg;
+      el.className = `toast t-${type}`;
+      toastTimer = setTimeout(() => el.classList.add("t-hidden"), ms);
     }
 
+    /* ══════════════════════════════════════════════════════════
+       STEP NAVIGATION
+    ══════════════════════════════════════════════════════════ */
+    function goToStep(n) {
+      if (n === 2 && !userCoords) { toast("Please share your location first.", "error"); return; }
+      if (n === 3 && currentStep < 2) { toast("Please describe the problem first.", "error"); return; }
+
+      document.querySelectorAll(".step-panel").forEach(p => p.classList.remove("active"));
+      document.getElementById(`step${n}`).classList.add("active");
+
+      for (let i = 1; i <= 3; i++) {
+        const si = document.getElementById(`si${i}`);
+        const sc = document.getElementById(`sc${i}`);
+        si.className = "step-item";
+        if (i < n) { si.classList.add("done"); sc.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px;">check</span>`; }
+        if (i === n) { si.classList.add("active"); sc.textContent = i; }
+        if (i > n) { sc.textContent = i; }
+      }
+      document.getElementById("conn1").classList.toggle("done", n > 1);
+      document.getElementById("conn2").classList.toggle("done", n > 2);
+
+      currentStep = n;
+      if (n === 3) loadMechanics();
+
+      // Invalidate map size when returning to step 1
+      if (n === 1 && map) setTimeout(() => map.invalidateSize(), 50);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       STEP 1 — LEAFLET MAP
+    ══════════════════════════════════════════════════════════ */
+    function initMap(lat = 6.9271, lng = 79.8612) {
+      if (map) return;
+
+      map = L.map("map", { zoomControl: false }).setView([lat, lng], 13);
+
+      // OpenStreetMap tiles — completely free, no token
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Move zoom control away from overlay
+      L.control.zoom({ position: "topright" }).addTo(map);
+    }
+
+    function placeUserMarker(lat, lng) {
+      if (userMarker) map.removeLayer(userMarker);
+
+      const icon = L.divIcon({
+        className: "",
+        html: '<div class="user-dot"></div>',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      });
+
+      userMarker = L.marker([lat, lng], { icon, zIndexOffset: 1000 })
+        .bindPopup("<strong>You are here</strong>")
+        .addTo(map);
+
+      map.flyTo([lat, lng], 15, { duration: 1.4 });
+    }
+
+    /* ── Reverse geocode with Nominatim (free, no key) ─────── */
+    async function reverseGeocode(lat, lng) {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`,
+          { headers: { "User-Agent": "FixMate/1.0 (roadside-assistance-app)" } }
+        );
+        const d = await res.json();
+        if (d.error) throw new Error(d.error);
+        const a = d.address || {};
+        const parts = [a.road, a.suburb || a.neighbourhood, a.city || a.town || a.village, a.state].filter(Boolean);
+        return parts.slice(0, 3).join(", ") || d.display_name;
+      } catch {
+        return `${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`;
+      }
+    }
+
+    /* ── Request GPS ──────────────────────────────────────── */
+    async function requestLocation() {
+      if (!navigator.geolocation) {
+        toast("Geolocation is not supported by your browser.", "error"); return;
+      }
+
+      const btn = document.getElementById("locate-btn");
+      const icon = document.getElementById("locate-icon");
+      const label = document.getElementById("locate-label");
+      const text = document.getElementById("location-text");
+
+      btn.disabled = true;
+      icon.textContent = "progress_activity";
+      icon.style.animation = "spin 1s linear infinite";
+      label.textContent = "Locating…";
+      text.textContent = "Detecting your GPS position…";
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+
+          if (!map) initMap(userCoords.lat, userCoords.lng);
+          placeUserMarker(userCoords.lat, userCoords.lng);
+
+          // Reverse geocode
+          text.textContent = "Resolving address…";
+          text.textContent = await reverseGeocode(userCoords.lat, userCoords.lng);
+
+          btn.disabled = false;
+          icon.textContent = "my_location";
+          icon.style.animation = "";
+          label.textContent = "Update My Location";
+
+          document.getElementById("btn-next1").classList.add("ready");
+          toast("Location found!", "success");
+        },
+        (err) => {
+          btn.disabled = false;
+          icon.textContent = "my_location";
+          icon.style.animation = "";
+          label.textContent = "Use My Current Location";
+          text.textContent = "Location not detected yet";
+
+          const msg = {
+            1: "Location access denied. Please allow it in your browser settings and try again.",
+            2: "Location unavailable. Make sure GPS is enabled.",
+            3: "Location request timed out. Please try again.",
+          }[err.code] || "Unable to detect location. Please try again.";
+
+          toast(msg, "error", 6000);
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      );
+    }
+
+    // Init map on page load (default view)
+    window.addEventListener("load", () => setTimeout(() => initMap(), 80));
+
+    /* ══════════════════════════════════════════════════════════
+       STEP 2 — PROBLEM TABS
+    ══════════════════════════════════════════════════════════ */
+    function switchTab(tab) {
+      ["know", "quiz", "photo"].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.toggle("active", t === tab);
+        document.getElementById(`panel-${t}`).classList.toggle("active", t === tab);
+      });
+    }
+
+    /* ── Quick-tag chips ─────────────────────────────────── */
+    const TAGS = [
+      "Engine won't start", "Flat tyre", "Battery dead", "Overheating",
+      "Brake issue", "Fuel empty", "Warning light on", "Transmission problem",
+      "AC not working", "Accident damage", "Oil leak", "Steering issue"
+    ];
+
+    (function buildTags() {
+      const wrap = document.getElementById("tag-wrap");
+      TAGS.forEach(tag => {
+        const b = document.createElement("button");
+        b.className = "prob-tag";
+        b.textContent = tag;
+        b.onclick = () => { b.classList.toggle("sel"); updateProblemDesc(); };
+        wrap.appendChild(b);
+      });
+    })();
+
+    function updateProblemDesc() {
+      const typed = document.getElementById("prob-text").value.trim();
+      const tagged = [...document.querySelectorAll(".prob-tag.sel")].map(b => b.textContent);
+      problemDesc = [typed, ...tagged].filter(Boolean).join(", ");
+    }
+
+    /* ── QUIZ ─────────────────────────────────────────────── */
+    const QUIZ = [
+      {
+        q: "Can your vehicle move at all right now?",
+        opts: [
+          { i: "🚫", l: "No — completely immobile" },
+          { i: "⚠️", l: "It moves but feels very wrong" },
+          { i: "🔈", l: "It moves but makes strange noises" },
+          { i: "✅", l: "Yes, it drives but something else is wrong" },
+        ]
+      },
+      {
+        q: "What happens when you try to start the engine?",
+        opts: [
+          { i: "🔇", l: "Completely silent — nothing happens" },
+          { i: "🔄", l: "It cranks over but won't fire up" },
+          { i: "💡", l: "Dashboard lights on but no engine start" },
+          { i: "✅", l: "Engine starts normally" },
+        ]
+      },
+      {
+        q: "Do you see any warning lights on the dashboard?",
+        opts: [
+          { i: "🔴", l: "Yes — red warning light(s)" },
+          { i: "🟡", l: "Yes — yellow/orange warning light(s)" },
+          { i: "🔵", l: "Check engine light is on" },
+          { i: "❌", l: "No warning lights at all" },
+        ]
+      },
+      {
+        q: "Any unusual sounds or smells from the vehicle?",
+        opts: [
+          { i: "💨", l: "Burning smell (rubber or electrical)" },
+          { i: "🔩", l: "Grinding, clicking or knocking noise" },
+          { i: "💧", l: "Hissing sound or fluid dripping" },
+          { i: "🚫", l: "No unusual sounds or smells" },
+        ]
+      },
+      {
+        q: "Check your tyres — do any look flat or damaged?",
+        opts: [
+          { i: "✅", l: "Yes, one or more tyres are flat/damaged" },
+          { i: "❌", l: "No — all tyres look fine" },
+        ]
+      },
+    ];
+
+    const DIAGNOSES = [
+      { match: (a) => a[0] === 0 && a[1] === 0, r: "Possible complete electrical failure, dead battery, or starter motor fault. Do not attempt to force-start.", label: "Electrical / Starter Failure" },
+      { match: (a) => a[0] === 0 && a[1] === 1, r: "Engine turns over but won't fire — likely a fuel delivery problem, spark plugs, or ignition issue.", label: "Fuel / Ignition Issue" },
+      { match: (a) => a[0] === 0 && a[1] === 2, r: "Battery has charge but engine won't start — could be a faulty ignition switch, immobiliser, or fuel pump.", label: "Ignition / Fuel Pump Issue" },
+      { match: (a) => a[0] === 1, r: "Possible transmission, drive-shaft, or wheel bearing issue. Avoid driving further to prevent more damage.", label: "Transmission / Drivetrain" },
+      { match: (a) => a[0] === 2, r: "Unusual noises while moving — likely a wheel bearing, brake pad wear, or suspension problem.", label: "Mechanical Noise Issue" },
+      { match: (a) => a[3] === 0, r: "Burning smell detected — could be overheating brakes, electrical fault, or coolant leak. Stop driving immediately.", label: "Overheating / Burning Smell" },
+      { match: (a) => a[4] === 0, r: "Flat or damaged tyre confirmed. You need a tyre change or inflation service. Do not drive on a flat tyre.", label: "Flat / Damaged Tyre" },
+      { match: (a) => a[2] === 0, r: "Red warning light — this indicates a critical issue (overheating, oil pressure, battery). Stop the vehicle safely now.", label: "Critical Warning Light" },
+      { match: (a) => a[2] === 1, r: "Yellow/orange warning light — non-critical but needs attention soon. Could be emissions, traction control, or low fluid.", label: "Advisory Warning Light" },
+      { match: () => true, r: "Based on your answers, there appears to be a mechanical or electrical issue that needs professional diagnosis on-site.", label: "General Mechanical Issue" },
+    ];
+
+    function renderQuiz() {
+      const q = QUIZ[quizIndex];
+      const pct = Math.round((quizIndex / QUIZ.length) * 100);
+
+      document.getElementById("quiz-bar").style.width = pct + "%";
+      document.getElementById("quiz-q").textContent = `Q${quizIndex + 1} of ${QUIZ.length}: ${q.q}`;
+      document.getElementById("quiz-result").style.display = "none";
+      document.getElementById("quiz-nav").style.display = "flex";
+
+      // Reset next-btn visibility
+      const nextBtn = document.getElementById("quiz-next");
+      nextBtn.style.display = "";
+      nextBtn.textContent = quizIndex === QUIZ.length - 1 ? "See Diagnosis →" : "Next →";
+      document.getElementById("quiz-back").style.display = quizIndex > 0 ? "" : "none";
+
+      const optsEl = document.getElementById("quiz-opts");
+      optsEl.innerHTML = "";
+      q.opts.forEach((opt, i) => {
+        const b = document.createElement("button");
+        b.className = "quiz-opt" + (quizAnswers[quizIndex] === i ? " chosen" : "");
+        b.innerHTML = `<span class="oi">${opt.i}</span>${opt.l}`;
+        b.onclick = () => {
+          optsEl.querySelectorAll(".quiz-opt").forEach(x => x.classList.remove("chosen"));
+          b.classList.add("chosen");
+          quizAnswers[quizIndex] = i;
+        };
+        optsEl.appendChild(b);
+      });
+    }
+
+    function quizNext() {
+      if (quizAnswers[quizIndex] === undefined) {
+        toast("Please choose an answer to continue.", "error"); return;
+      }
+      if (quizIndex < QUIZ.length - 1) {
+        quizIndex++;
+        renderQuiz();
+      } else {
+        showDiagnosis();
+      }
+    }
+
+    function quizBack() {
+      if (quizIndex > 0) { quizIndex--; renderQuiz(); }
+    }
+
+    function showDiagnosis() {
+      document.getElementById("quiz-bar").style.width = "100%";
+      document.getElementById("quiz-q").textContent = "🔍 Diagnosis complete";
+      document.getElementById("quiz-opts").innerHTML = "";
+      document.getElementById("quiz-nav").style.display = "none";
+
+      const answerArr = Object.values(quizAnswers);
+      const match = DIAGNOSES.find(d => d.match(quizAnswers)) || DIAGNOSES[DIAGNOSES.length - 1];
+      problemDesc = `${match.label}: ${match.r}`;
+
+      const res = document.getElementById("quiz-result");
+      res.style.display = "block";
+      res.innerHTML = `
+      <strong>🔧 ${match.label}</strong><br>
+      <span style="font-weight:400;">${match.r}</span>
+      <br>
+      <button class="restart-btn" onclick="restartQuiz()">
+        <span class="material-symbols-outlined" style="font-size:14px;">refresh</span>
+        Restart quiz
+      </button>`;
+    }
+
+    function restartQuiz() {
+      quizIndex = 0;
+      quizAnswers = {};
+      problemDesc = "";
+      renderQuiz();
+    }
+
+    // Init quiz
+    renderQuiz();
+
+    /* ── PHOTO UPLOAD ─────────────────────────────────────── */
+    function handleFiles(files) {
+      const grid = document.getElementById("preview-grid");
+      const remaining = 5 - uploadedFiles.length;
+      const toAdd = [...files].slice(0, remaining);
+
+      toAdd.forEach(file => {
+        if (!file.type.startsWith("image/")) { toast("Only image files allowed.", "error"); return; }
+        uploadedFiles.push(file);
+
+        const reader = new FileReader();
+        reader.onload = e => {
+          const wrap = document.createElement("div");
+          wrap.className = "preview-wrap";
+
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          img.className = "preview-img";
+          img.alt = file.name;
+
+          const del = document.createElement("button");
+          del.className = "preview-del";
+          del.innerHTML = "✕";
+          del.title = "Remove";
+          del.onclick = (ev) => {
+            ev.stopPropagation();
+            uploadedFiles = uploadedFiles.filter(f => f !== file);
+            wrap.remove();
+            if (uploadedFiles.length === 0) problemDesc = problemDesc.replace("Vehicle images uploaded for mechanic inspection.", "").trim();
+          };
+
+          wrap.appendChild(img);
+          wrap.appendChild(del);
+          grid.appendChild(wrap);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      if (uploadedFiles.length > 0) {
+        problemDesc = problemDesc || "Vehicle images uploaded for mechanic inspection.";
+      }
+
+      if (files.length > remaining) toast(`Maximum 5 photos. Only the first ${remaining} were added.`, "error");
+
+      // Reset input so same file can be re-selected
+      document.getElementById("file-input").value = "";
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById("upload-zone").classList.remove("drag");
+      handleFiles(e.dataTransfer.files);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       STEP 3 — MECHANICS
+    ══════════════════════════════════════════════════════════ */
+
+    /* ── Haversine distance (km) ─────────────────────────── */
+    function haversine(lat1, lng1, lat2, lng2) {
+      const R = 6371, rad = Math.PI / 180;
+      const dLat = (lat2 - lat1) * rad;
+      const dLng = (lng2 - lng1) * rad;
+      const a = Math.sin(dLat / 2) ** 2
+        + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2;
+      return +(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(1);
+    }
+
+    /* ── Sri Lanka city coordinates lookup ─────────────────
+       Used to calculate real approximate distance when a mechanic
+       only has a city name (no exact GPS stored in the DB).
+       Covers every city in the mechanic_applications test data.
+    ══════════════════════════════════════════════════════════ */
+    const CITY_COORDS = {
+      // Western Province
+      "colombo": { lat: 6.9271, lng: 79.8612 },
+      "colombo 01": { lat: 6.9347, lng: 79.8428 },
+      "colombo 02": { lat: 6.9271, lng: 79.8494 },
+      "colombo 03": { lat: 6.9175, lng: 79.8536 },
+      "colombo 04": { lat: 6.8885, lng: 79.8576 },
+      "colombo 05": { lat: 6.8790, lng: 79.8713 },
+      "colombo 06": { lat: 6.8694, lng: 79.8663 },
+      "colombo 07": { lat: 6.9147, lng: 79.8723 },
+      "colombo 10": { lat: 6.9271, lng: 79.8612 },
+      "colombo 15": { lat: 6.9535, lng: 79.8561 },
+      "gampaha": { lat: 7.0837, lng: 80.0098 },
+      "negombo": { lat: 7.2096, lng: 79.8347 },
+      "kalutara": { lat: 6.5854, lng: 79.9607 },
+      "panadura": { lat: 6.7131, lng: 79.9044 },
+      "moratuwa": { lat: 6.7731, lng: 79.8811 },
+      "dehiwala": { lat: 6.8516, lng: 79.8672 },
+      "kelaniya": { lat: 7.0021, lng: 79.9206 },
+      "wattala": { lat: 6.9892, lng: 79.8904 },
+      "ja-ela": { lat: 7.0731, lng: 79.8920 },
+      "kaduwela": { lat: 6.9280, lng: 79.9892 },
+      "kottawa": { lat: 6.8378, lng: 79.9622 },
+      "homagama": { lat: 6.8431, lng: 80.0016 },
+      "maharagama": { lat: 6.8481, lng: 79.9268 },
+      "rajagiriya": { lat: 6.9107, lng: 79.8939 },
+      "nugegoda": { lat: 6.8700, lng: 79.8967 },
+      "boralesgamuwa": { lat: 6.8386, lng: 79.8964 },
+      "piliyandala": { lat: 6.8006, lng: 79.9274 },
+      // Central Province
+      "kandy": { lat: 7.2906, lng: 80.6337 },
+      "matale": { lat: 7.4675, lng: 80.6234 },
+      "nuwara eliya": { lat: 6.9497, lng: 80.7891 },
+      "dambulla": { lat: 7.8731, lng: 80.6517 },
+      "ampitiya": { lat: 7.2797, lng: 80.6672 },
+      "peradeniya": { lat: 7.2697, lng: 80.5984 },
+      "gampola": { lat: 7.1635, lng: 80.5748 },
+      "hatton": { lat: 6.8916, lng: 80.5953 },
+      // Southern Province
+      "galle": { lat: 6.0535, lng: 80.2209 },
+      "matara": { lat: 5.9549, lng: 80.5550 },
+      "hambantota": { lat: 6.1241, lng: 81.1185 },
+      "tangalle": { lat: 6.0247, lng: 80.7975 },
+      "weligama": { lat: 5.9740, lng: 80.4286 },
+      "ambalangoda": { lat: 6.2333, lng: 80.0563 },
+      "hikkaduwa": { lat: 6.1395, lng: 80.1025 },
+      // Northern Province
+      "jaffna": { lat: 9.6615, lng: 80.0255 },
+      "vavuniya": { lat: 8.7514, lng: 80.4971 },
+      "mannar": { lat: 8.9810, lng: 79.9037 },
+      "kilinochchi": { lat: 9.3803, lng: 80.4036 },
+      "mullaitivu": { lat: 9.2671, lng: 80.8128 },
+      // Eastern Province
+      "trincomalee": { lat: 8.5874, lng: 81.2152 },
+      "batticaloa": { lat: 7.7170, lng: 81.6924 },
+      "ampara": { lat: 7.2987, lng: 81.6724 },
+      "kalmunai": { lat: 7.4139, lng: 81.8264 },
+      "akkaraipattu": { lat: 7.2165, lng: 81.8411 },
+      // North Western Province
+      "kurunegala": { lat: 7.4875, lng: 80.3647 },
+      "puttalam": { lat: 8.0362, lng: 79.8283 },
+      "chilaw": { lat: 7.5760, lng: 79.7958 },
+      "kuliyapitiya": { lat: 7.4684, lng: 80.0423 },
+      // North Central Province
+      "anuradhapura": { lat: 8.3114, lng: 80.4037 },
+      "polonnaruwa": { lat: 7.9403, lng: 81.0188 },
+      "mihintale": { lat: 8.3500, lng: 80.5000 },
+      // Sabaragamuwa Province
+      "ratnapura": { lat: 6.6828, lng: 80.3992 },
+      "kegalle": { lat: 7.2513, lng: 80.3464 },
+      "balangoda": { lat: 6.6511, lng: 80.6961 },
+      // Uva Province
+      "badulla": { lat: 6.9895, lng: 81.0557 },
+      "monaragala": { lat: 6.8726, lng: 81.3508 },
+      "bandarawela": { lat: 6.8296, lng: 81.0025 },
+      "welimada": { lat: 6.9063, lng: 80.9162 },
+    };
+
+    /**
+     * Look up coordinates for a city string.
+     * Strips district suffixes like "Colombo 03" → checks full key then "colombo".
+     * Falls back to geographic centre of Sri Lanka if city is unknown.
+     */
+    function cityCoords(cityStr) {
+      const key = (cityStr || "").toLowerCase().trim();
+      if (CITY_COORDS[key]) return CITY_COORDS[key];
+
+      // Try stripping trailing number: "colombo 03" → "colombo"
+      const stripped = key.replace(/\s+\d+$/, "").trim();
+      if (CITY_COORDS[stripped]) return CITY_COORDS[stripped];
+
+      // Try matching any key that starts with the city word
+      const partial = Object.keys(CITY_COORDS).find(k => k.startsWith(stripped));
+      if (partial) return CITY_COORDS[partial];
+
+      // Unknown city — return Sri Lanka centre (will show ~150-300 km, clearly fake)
+      return { lat: 7.8731, lng: 80.7718 };
+    }
+
+    /* ── Transform DB row into card object ─────────────────── */
+    const AV_COLORS = ["#003d9b", "#1b5e20", "#b71c1c", "#4a148c", "#e65100", "#006064", "#37474f"];
+    const V_LABELS = { cars: "Cars", bikes: "Bikes", cars_bikes: "Cars & Bikes", all: "All Vehicles" };
+    const EXP_LABELS = { less_than_1: "<1 yr exp", "1_3": "1–3 yrs", "3_5": "3–5 yrs", "5_10": "5–10 yrs", "10_plus": "10+ yrs" };
+
+    function transformRow(row, idx) {
+      const parts = (row.full_name || "").trim().split(/\s+/);
+      const initials = parts.map(p => p[0] || "").join("").toUpperCase().slice(0, 2) || "??";
+
+      // Use real GPS coords if stored, otherwise fall back to city centre lookup
+      let dist;
+      let _cityCoords;
+      if (row.lat && row.lng) {
+        _cityCoords = { lat: row.lat, lng: row.lng };
+      } else {
+        _cityCoords = cityCoords(row.city);
+      }
+      dist = userCoords
+        ? haversine(userCoords.lat, userCoords.lng, _cityCoords.lat, _cityCoords.lng)
+        : null;
+
+      return {
+        id: row.id,
+        name: row.full_name || "Unknown",
+        specialty: V_LABELS[row.vehicle_types] || row.vehicle_types || "General Mechanic",
+        experience: EXP_LABELS[row.experience] || row.experience || "",
+        city: row.city || "",
+        ownTools: row.own_tools,
+        dist,
+        _cityCoords,
+        rating: +(4.3 + seededRnd(row.id, 1) * 0.7).toFixed(1),
+        reviews: Math.floor(20 + seededRnd(row.id, 2) * 180),
+        available: seededRnd(row.id, 3) > 0.28,
+        phone: row.phone || "",
+        color: AV_COLORS[idx % AV_COLORS.length],
+        initials,
+        fromDB: true,
+      };
+    }
+
+    // Deterministic pseudo-random from a string seed + salt
+    function seededRnd(seed, salt) {
+      const str = String(seed) + String(salt);
+      let h = 2166136261;
+      for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return (h >>> 0) / 4294967295;
+    }
+
+    /* ── Fallback data (used until real mechanics register) ─ */
+    const FALLBACK = [
+      { id: "f1", full_name: "Kamal Perera", phone: "+94771234567", vehicle_types: "cars", experience: "5_10", city: "Negombo", lat: null, lng: null, own_tools: true },
+      { id: "f2", full_name: "Nimal Silva", phone: "+94779876543", vehicle_types: "cars_bikes", experience: "3_5", city: "Negombo", lat: null, lng: null, own_tools: true },
+      { id: "f3", full_name: "Ruwan Fernando", phone: "+94772345678", vehicle_types: "all", experience: "10_plus", city: "Negombo", lat: null, lng: null, own_tools: true },
+      { id: "f4", full_name: "Ashan Gunaratne", phone: "+94778765432", vehicle_types: "bikes", experience: "1_3", city: "Negombo", lat: null, lng: null, own_tools: false },
+      { id: "f5", full_name: "Thilina Rajapaksa", phone: "+94773456789", vehicle_types: "cars", experience: "3_5", city: "Negombo", lat: null, lng: null, own_tools: true },
+    ];
+
+    /* ── Fetch from Supabase ─────────────────────────────── */
+    async function fetchMechanics() {
+      try {
+        const { data, error } = await sb
+          .from("mechanic_applications")
+          .select("id, full_name, phone, city, experience, vehicle_types, own_tools, lat, lng")
+          .eq("status", "approved");
+
+        if (error) throw error;
+        if (data && data.length > 0) return { rows: data, fromDB: true };
+        return { rows: FALLBACK, fromDB: false };
+      } catch (e) {
+        console.warn("Supabase fetch failed, using fallback:", e.message);
+        return { rows: FALLBACK, fromDB: false };
+      }
+    }
+
+    /* ── Place mechanic pins on the map ─────────────────── */
+    function placeMechanicMarkers(list) {
+      mechMarkers.forEach(m => map && map.removeLayer(m));
+      mechMarkers = [];
+      if (!map) return;
+
+      list.forEach(m => {
+        // Use city centre coordinates stored during transformRow
+        const lat = m._cityCoords?.lat ?? (userCoords?.lat ?? 7.8731);
+        const lng = m._cityCoords?.lng ?? (userCoords?.lng ?? 80.7718);
+
+        const icon = L.divIcon({
+          className: "",
+          html: `<div class="mech-pin" style="background:${m.color}; width:34px; height:34px;">${m.initials}</div>`,
+          iconSize: [34, 34],
+          iconAnchor: [17, 17],
+        });
+
+        const distLabel = m.dist !== null ? `${m.dist} km away` : m.city;
+
+        const marker = L.marker([lat, lng], { icon })
+          .bindPopup(`
+          <strong>${m.name}</strong><br>
+          ${m.specialty} &nbsp;·&nbsp; ${m.city}<br>
+          ⭐ ${m.rating} &nbsp;·&nbsp; ${distLabel}<br>
+          <span style="color:${m.available ? "#1b8a4e" : "#e65100"}; font-weight:700;">
+            ${m.available ? "✓ Available" : "⏳ Busy"}
+          </span>`)
+          .addTo(map);
+
+        mechMarkers.push(marker);
+      });
+    }
+
+    /* ── Build WhatsApp URL at click time ────────────────── */
+    function buildWaUrl(phone, name) {
+      const cleanPhone = phone.replace(/[^0-9]/g, "");
+      const locPart = userCoords
+        ? `\n\n📍 My location: https://maps.google.com/?q=${userCoords.lat},${userCoords.lng}`
+        : "";
+      const prob = problemDesc || "vehicle issue";
+      const msg = `Hi ${name}, I found you on FixMate. I need help with:\n*${prob}*${locPart}`;
+      return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+    }
+
+    /* ── Render cards ────────────────────────────────────── */
+    function renderCards(list, fromDB) {
+      const avail = list.filter(m => m.available).length;
+      document.getElementById("res-title").textContent = `${list.length} mechanic${list.length !== 1 ? "s" : ""} found`;
+      document.getElementById("res-sub").textContent =
+        `${avail} available now · ${userCoords ? "Sorted by distance from you" : ""}`;
+
+      const container = document.getElementById("mech-list");
+
+      if (!list.length) {
+        container.innerHTML = `
+        <div class="no-res">
+          <span class="material-symbols-outlined">search_off</span>
+          No mechanics found right now.<br>Try again in a few minutes.
+        </div>`;
+        return;
+      }
+
+      const dbNote = fromDB
+        ? `<div class="db-note"><span class="material-symbols-outlined" style="font-size:16px;">verified</span> Showing verified mechanics from our database.</div>`
+        : `<div class="db-note" style="background:#fff8e1; border-color:#ffe082; color:#7a5c00;">
+           <span class="material-symbols-outlined" style="font-size:16px;">info</span>
+           No approved mechanics yet — showing demo data. Share the mechanic sign-up link to get real mechanics.
+         </div>`;
+
+      container.innerHTML = dbNote + list.map(m => `
+      <div class="mech-card">
+        <div class="mech-top">
+          <div class="mech-av" style="background:${m.color};">${m.initials}</div>
+          <div class="mech-info">
+            <div class="mech-name">${m.name}</div>
+            <div class="mech-spec">${m.specialty}${m.experience ? " · " + m.experience : ""}${m.city ? " · " + m.city : ""}</div>
+            <div class="mech-meta">
+              <span class="mbadge ${m.available ? "b-avail" : "b-busy"}">
+                <span class="material-symbols-outlined" style="font-size:11px;">${m.available ? "circle" : "schedule"}</span>
+                ${m.available ? "Available" : "Busy"}
+              </span>
+              <span class="mbadge b-dist">
+                <span class="material-symbols-outlined" style="font-size:11px;">near_me</span>
+                ${m.dist !== null ? m.dist + " km" : m.city}
+              </span>
+              <span class="mbadge b-rating">⭐ ${m.rating} (${m.reviews})</span>
+              ${m.ownTools ? `<span class="mbadge" style="background:#f3e5f5;color:#6a1b9a;">🔧 Own tools</span>` : ""}
+            </div>
+          </div>
+        </div>
+        <div class="mech-div"></div>
+        <div class="mech-actions">
+          <button class="btn-wa" onclick="window.open(buildWaUrl('${m.phone}', '${m.name.replace(/'/g, "\\'")}'), '_blank')">
+            <svg class="wa-svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+            WhatsApp
+          </button>
+          <a href="tel:${m.phone}" class="btn-call">
+            <span class="material-symbols-outlined" style="font-size:18px;">call</span>
+            Call
+          </a>
+        </div>
+      </div>`).join("");
+    }
+
+    /* ── Load mechanics ──────────────────────────────────── */
+    async function loadMechanics() {
+      document.getElementById("res-title").textContent = "Searching nearby mechanics…";
+      document.getElementById("res-sub").textContent = "";
+      document.getElementById("mech-list").innerHTML = `
+      <div class="loading-card">
+        <div class="spinner"></div>
+        <p style="color:var(--muted); font-size:0.875rem; margin:0;">Finding mechanics near you…</p>
+      </div>`;
+
+      const { rows, fromDB } = await fetchMechanics();
+      allMechanics = rows.map((r, i) => transformRow(r, i));
+
+      // Sort by distance by default (nulls go to end)
+      mechanics = [...allMechanics].sort((a, b) => {
+        if (a.dist === null && b.dist === null) return 0;
+        if (a.dist === null) return 1;
+        if (b.dist === null) return -1;
+        return a.dist - b.dist;
+      });
+
+      renderCards(mechanics, fromDB);
+      placeMechanicMarkers(mechanics);
+    }
+
+    function sortMechanics(by) {
+      const sorted = [...allMechanics].sort((a, b) => {
+        if (by === "distance") {
+          if (a.dist === null && b.dist === null) return 0;
+          if (a.dist === null) return 1;
+          if (b.dist === null) return -1;
+          return a.dist - b.dist;
+        }
+        if (by === "rating") return b.rating - a.rating;
+        if (by === "available") return (b.available ? 1 : 0) - (a.available ? 1 : 0);
+        return 0;
+      });
+      mechanics = sorted;
+      renderCards(sorted, sorted[0]?.fromDB ?? false);
+    }
+
+    function findMechanics() {
+      updateProblemDesc();
+      if (!problemDesc) {
+        toast("Please describe the problem or pick a quick tag first.", "error"); return;
+      }
+      goToStep(3);
+    }
   </script>
-  <script src="./src/js/search-mechanic.js"></script>
 
 </body>
 
