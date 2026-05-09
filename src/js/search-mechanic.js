@@ -603,7 +603,11 @@ function buildWhatsAppUrl(phone) {
     ? `https://maps.google.com/?q=${userCoords.lat},${userCoords.lng}`
     : "";
   const msg = `Hi, I found you on FixMate. I need help with: ${desc}.${locStr ? " My location: " + locStr : ""}`;
-  const cleanPhone = phone.replace(/[^0-9]/g, "");
+  let cleanPhone = phone.replace(/[^0-9]/g, "");
+  // Convert Sri Lankan numbers starting with 0 to international format
+  if (cleanPhone.startsWith("0")) {
+    cleanPhone = "94" + cleanPhone.substring(1);
+  }
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
 }
 
